@@ -23,7 +23,6 @@ use regex::Regex;
 pub mod git_base85;
 pub mod git_delta;
 
-use self::git_base85::GitBase85;
 use crate::lines::{Line, Lines};
 use crate::text_diff::{DiffParseError, DiffParseResult};
 use crate::DiffFormat;
@@ -159,7 +158,6 @@ pub struct GitBinaryDiffParser {
     data_start_cre: Regex,
     blank_line_cre: Regex,
     data_line_cre: Regex,
-    git_base85: GitBase85,
 }
 
 impl GitBinaryDiffParser {
@@ -172,7 +170,6 @@ impl GitBinaryDiffParser {
                 r"^([a-zA-Z])(([0-9a-zA-Z!#$%&()*+;<=>?@^_`{|}~-]{5})+)(\n)?$",
             )
             .unwrap(),
-            git_base85: GitBase85::new(),
         }
     }
 
@@ -202,9 +199,7 @@ impl GitBinaryDiffParser {
         if index < lines.len() && self.blank_line_cre.is_match(&lines[index]) {
             index += 1;
         }
-        let data_zipped = self
-            .git_base85
-            .decode_lines(&lines[start_index + 1..end_data])?;
+        let data_zipped = git_base85::decode_lines(&lines[start_index + 1..end_data])?;
         Ok((
             GitBinaryDiffData {
                 lines: lines[start_index..end_data].to_vec(),
@@ -245,7 +240,7 @@ mod tests {
 
     #[test]
     fn get_git_binary_diff_at_works() {
-        let lines = Lines::read_from(&Path::new("../test_diffs/test_2.binary_diff")).unwrap();
+        let lines = Lines::read_from(&Path::new("./test_diffs/test_2.binary_diff")).unwrap();
         let parser = GitBinaryDiffParser::new();
         let result = parser.get_diff_at(&lines, 1);
         assert!(result.is_ok());

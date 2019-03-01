@@ -15,6 +15,8 @@
 extern crate inflate;
 extern crate lcs;
 extern crate regex;
+#[macro_use]
+extern crate lazy_static;
 
 use std::slice::Iter;
 
