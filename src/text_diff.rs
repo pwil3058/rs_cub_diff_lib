@@ -224,7 +224,7 @@ pub fn extract_source_lines<F: Fn(&Line) -> bool>(
             trimmed_lines.push(Arc::new(line[trim_left_n..].to_string()));
         } else {
             trimmed_lines.push(Arc::new(
-                line[trim_left_n..].trim_right_matches("\n").to_string(),
+                line[trim_left_n..].trim_end_matches("\n").to_string(),
             ));
         }
     }

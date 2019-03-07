@@ -121,7 +121,7 @@ pub fn decode_size(ch: u8) -> DiffParseResult<usize> {
 }
 
 pub fn decode_line(line: &Line) -> DiffParseResult<Vec<u8>> {
-    let string = line.trim_right().as_bytes();
+    let string = line.trim_end().as_bytes();
     let size = decode_size(string[0])?;
     let encoding = Encoding {
         string: string[1..].to_vec(),
