@@ -5,6 +5,9 @@ authors = ["Peter Williams <pwil3058@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+lazy_static = "0.2.8"
+regex = "0.2"
+
 gdk-pixbuf = "0.6.0"
 gio = "0.6.0"
 glib = "0.7.0"

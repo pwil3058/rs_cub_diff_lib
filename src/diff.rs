@@ -14,6 +14,9 @@
 
 use std::rc::Rc;
 
+use lazy_static;
+use regex::Regex;
+
 use gtk;
 use gtk::prelude::*;
 
@@ -54,6 +57,111 @@ impl TwsLineCountDisplay {
         //}
     }
 }
+
+lazy_static! {
+    static ref TWS_CHECK_CRE: Regex = Regex::new(r"^([\+!].*\S)(\s+\n?)$").unwrap();
+}
+
+enum MarkupType {
+    Header,
+    Before,
+    After,
+    Added,
+    Removed,
+    Changed,
+    Unchanged,
+    AddedTWS,
+    Stats,
+    Separator,
+    ContextAid,
+}
+
+macro_rules! markup_as {
+    ( $mut:expr, $text:expr ) => {
+        match $mut {
+            MarkupType::Header => format!("<scan weight=Pango::Weight::BOLD, foreground=\"#0000AA\", family=\"monospace\">{}</scan>", $text),
+            MarkupType::Before => format!("<scan foreground=\"#AA0000\", family=\"monospace\">{}</scan>", $text),
+            MarkupType::After => format!("<scan foreground=\"#008800\", family=\"monospace\">{}</scan>", $text),
+            MarkupType::Removed => format!("<scan foreground=\"#AA0000\", family=\"monospace\">{}</scan>", $text),
+            MarkupType::Added => format!("<scan foreground=\"#008800\", family=\"monospace\">{}</scan>", $text),
+            MarkupType::Changed => format!("<scan foreground=\"#AA6600\", family=\"monospace\">{}</scan>", $text),
+            MarkupType::Unchanged => format!("<scan foreground=\"#000000\", family=\"monospace\">{}</scan>", $text),
+            MarkupType::AddedTWS => format!("<scan background=\"#008800\", family=\"monospace\">{}</scan>", $text),
+            MarkupType::Stats => format!("<scan foreground=\"#AA00AA\", family=\"monospace\">{}</scan>", $text),
+            MarkupType::Separator => format!("<scan weight=Pango::Weight::BOLD, foreground=\"#0000AA\", family=\"monospace\">{}</scan>", $text),
+            MarkupType::ContextAid => format!("<scan foreground=\"#00AAAA\", family=\"monospace\">{}</scan>", $text),
+        }
+    }
+}
+
+        //self.index_tag = self.create_tag("INDEX", weight=Pango.Weight.BOLD, foreground="#0000AA", family="monospace")
+        //self.sep_tag = self.create_tag("SEP", weight=Pango.Weight.BOLD, foreground="#0000AA", family="monospace")
+        //self.minus_tag = self.create_tag("MINUS", foreground="#AA0000", family="monospace")
+        //self.lab_tag = self.create_tag("LAB", foreground="#AA0000", family="monospace")
+        //self.plus_tag = self.create_tag("PLUS", foreground="#006600", family="monospace")
+        //self.added_tws_tag = self.create_tag("ADDED_TWS", background="#006600", family="monospace")
+        //self.star_tag = self.create_tag("STAR", foreground="#006600", family="monospace")
+        //self.rab_tag = self.create_tag("RAB", foreground="#006600", family="monospace")
+        //self.change_tag = self.create_tag("CHANGED", foreground="#AA6600", family="monospace")
+        //self.stats_tag = self.create_tag("STATS", foreground="#AA00AA", family="monospace")
+        //self.func_tag = self.create_tag("FUNC", foreground="#00AAAA", family="monospace")
+        //self.unchanged_tag = self.create_tag("UNCHANGED", foreground="black", family="monospace")
+
+
+pub trait DiffPlusTextBuffer: gtk::TextBufferExt {
+    fn append_markup(&mut self, markup: &str) {
+        self.insert_markup(&mut self.get_end_iter(), markup);
+    }
+
+    fn append_diff_plus_line(&mut self, line: &str) -> usize {
+        use MarkupType::*;
+        let mut is_context_diff = false;
+        if line.starts_with(" ") {
+            self.append_markup(&markup_as!(Unchanged, line));
+        } else if line.starts_with("+") {
+            if let Some(captures) = TWS_CHECK_CRE.captures(line) {
+                let text = captures.get(1).unwrap().as_str();
+                self.append_markup(&markup_as!(Added, line));
+                self.append_markup(&markup_as!(AddedTWS, captures.get(2).unwrap().as_str()));
+                return text.len()
+            } else {
+                self.append_markup(&markup_as!(Added, line));
+            }
+        } else if line.starts_with("---") {
+            self.append_markup(&markup_as!(Removed, line));
+        } else if line.starts_with("-") {
+            self.append_markup(&markup_as!(Removed, line));
+        } else if line.starts_with("!") {
+            if let Some(captures) = TWS_CHECK_CRE.captures(line) {
+                let text = captures.get(1).unwrap().as_str();
+                self.append_markup(&markup_as!(Changed, line));
+                self.append_markup(&markup_as!(AddedTWS, captures.get(2).unwrap().as_str()));
+                return text.len()
+            } else {
+                self.append_markup(&markup_as!(Changed, line));
+            }
+        } else if line.starts_with("@") {
+            if let Some(i) = line.rfind("@@") {
+                self.append_markup(&markup_as!(Stats, &line[..i + 2]));
+                self.append_markup(&markup_as!(ContextAid, &line[i + 2..]));
+            } else {
+                self.append_markup(&markup_as!(Stats, line));
+            }
+        } else if line.starts_with("****") {
+            self.append_markup(&markup_as!(Separator, line));
+        } else if line.starts_with("***") {
+            self.append_markup(&markup_as!(Separator, line));
+            //self.append_markup(line, self.sep_tag)
+        //} else if line.starts_with("*") {
+            //self.append_markup(line, self.star_tag)
+        //} else {
+            //self.append_markup(line, self.index_tag)
+        }
+        0
+    }
+}
+
+impl DiffPlusTextBuffer for gtk::TextBuffer {}
 
 #[cfg(test)]
 mod tests {
