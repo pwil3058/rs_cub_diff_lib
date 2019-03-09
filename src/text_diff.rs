@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::error::Error;
+use std::fmt;
 use std::io;
 use std::num::ParseIntError;
 use std::path::{Path, PathBuf};
@@ -38,6 +40,24 @@ pub enum DiffParseError {
     ZLibInflateError(String),
     GitDeltaError(DeltaError),
     IOError(io::Error),
+}
+
+impl fmt::Display for DiffParseError {
+    // TODO: flesh out fmt::Display implementation for DiffParseError
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "bug the developer to fix this!")
+    }
+}
+
+impl Error for DiffParseError {
+    // TODO: flesh out error::Error implementation for DiffParseError
+    fn description(&self) -> &str {
+        "I'm the superhero of diff parsing errors"
+    }
+
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
+    }
 }
 
 pub type DiffParseResult<T> = Result<T, DiffParseError>;
