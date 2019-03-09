@@ -163,6 +163,23 @@ pub trait DiffPlusTextBuffer: gtk::TextBufferExt {
 
 impl DiffPlusTextBuffer for gtk::TextBuffer {}
 
+pub struct DiffPlusNotebook {
+    notebook: gtk::Notebook,
+}
+
+impl_widget_wrapper!(notebook: gtk::Notebook, DiffPlusNotebook);
+
+impl DiffPlusNotebook {
+    pub fn new() -> Rc<Self> {
+        Rc::new(Self{
+            notebook: gtk::Notebook::new(),
+        })
+    }
+
+    pub fn update(&self, _text: &str) {}
+    pub fn repopulate(&self, _text: &str) {}
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
