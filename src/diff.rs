@@ -12,6 +12,7 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use lazy_static;
@@ -19,6 +20,9 @@ use regex::Regex;
 
 use gtk;
 use gtk::prelude::*;
+
+use cub_diff_lib::diff::DiffPlus;
+use cub_diff_lib::lines::*;
 
 use pw_gix::wrapper::*;
 
@@ -165,6 +169,7 @@ impl DiffPlusTextBuffer for gtk::TextBuffer {}
 
 pub struct DiffPlusNotebook {
     notebook: gtk::Notebook,
+    lines: RefCell<Lines>,
 }
 
 impl_widget_wrapper!(notebook: gtk::Notebook, DiffPlusNotebook);
@@ -173,11 +178,15 @@ impl DiffPlusNotebook {
     pub fn new() -> Rc<Self> {
         Rc::new(Self{
             notebook: gtk::Notebook::new(),
+            lines: RefCell::new(vec![]),
         })
     }
 
-    pub fn update(&self, _text: &str) {}
-    pub fn repopulate(&self, _text: &str) {}
+    pub fn update(&self, _diff_pluses: &Vec<DiffPlus>) {
+    }
+
+    pub fn repopulate(&self, _diff_pluses: &Vec<DiffPlus>) {
+    }
 }
 
 #[cfg(test)]
