@@ -154,6 +154,20 @@ impl DiffPlusParser {
             Ok(None)
         }
     }
+
+    pub fn parse_lines(&self, lines: &[Line]) -> DiffParseResult<Vec<DiffPlus>> {
+        let mut diff_pluses = vec![];
+        let mut index = 0;
+        while index < lines.len() {
+            if let Some(diff_plus) = self.get_diff_plus_at(lines, index)? {
+                index += diff_plus.len();
+                diff_pluses.push(diff_plus);
+            } else {
+                index += 1;
+            }
+        }
+        Ok(diff_pluses)
+    }
 }
 
 #[cfg(test)]
