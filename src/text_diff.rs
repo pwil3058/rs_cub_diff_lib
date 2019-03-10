@@ -109,6 +109,14 @@ where
         MultiListIter::<Line>::new(list)
     }
 
+    pub fn get_file_path(&self) -> &PathBuf {
+        if self.header.post_pat.file_path != PathBuf::from("/dev/null") {
+            &self.header.post_pat.file_path
+        } else {
+            &self.header.ante_pat.file_path
+        }
+    }
+
     pub fn diff_format(&self) -> DiffFormat {
         self.diff_format
     }
