@@ -13,6 +13,7 @@
 //limitations under the License.
 
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use lazy_static;
@@ -167,9 +168,11 @@ pub trait DiffPlusTextBuffer: gtk::TextBufferExt {
 
 impl DiffPlusTextBuffer for gtk::TextBuffer {}
 
+pub struct DiffPlusDisplay {}
+
 pub struct DiffPlusNotebook {
     notebook: gtk::Notebook,
-    lines: RefCell<Lines>,
+    diff_plus_displays: RefCell<HashMap<String, DiffPlusDisplay>>,
 }
 
 impl_widget_wrapper!(notebook: gtk::Notebook, DiffPlusNotebook);
@@ -178,14 +181,23 @@ impl DiffPlusNotebook {
     pub fn new() -> Rc<Self> {
         Rc::new(Self{
             notebook: gtk::Notebook::new(),
-            lines: RefCell::new(vec![]),
+            diff_plus_displays: RefCell::new(HashMap::<String, DiffPlusDisplay>::new()),
         })
     }
 
     pub fn update(&self, _diff_pluses: &Vec<DiffPlus>) {
     }
 
-    pub fn repopulate(&self, _diff_pluses: &Vec<DiffPlus>) {
+    pub fn repopulate(&self, diff_pluses: &Vec<DiffPlus>) {
+        // Clear all existing data/pages
+        for child in self.notebook.get_children().iter() {
+            self.notebook.remove(child);
+        }
+        self.diff_plus_displays.borrow_mut().clear();
+        // Now create the new pages
+        for diff_plus in diff_pluses.iter() {
+            //let file_path = diff_plus.get_file_path();
+        }
     }
 }
 
