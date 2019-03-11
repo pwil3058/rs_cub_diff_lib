@@ -13,10 +13,11 @@
 //limitations under the License.
 
 use std::collections::{hash_map, HashMap};
-use std::path::PathBuf;
 use std::slice::Iter;
 
 use regex::Regex;
+
+use pw_pathux::str_path::*;
 
 use crate::lines::{Line, Lines};
 use crate::PATH_RE_STR;
@@ -48,12 +49,20 @@ impl GitPreamble {
         self.post_file_path.as_str()
     }
 
-    pub fn ante_file_path_buf(&self) -> PathBuf {
-        self.ante_file_path.clone().into()
+    pub fn get_ante_file_path(&self, strip_level: usize) -> String {
+        self.ante_file_path.path_stripped_of_n_levels(strip_level)
     }
 
-    pub fn post_file_path_buf(&self) -> PathBuf {
-        self.post_file_path.clone().into()
+    pub fn get_post_file_path(&self, strip_level: usize) -> String {
+        self.post_file_path.path_stripped_of_n_levels(strip_level)
+    }
+
+    pub fn get_file_path(&self, strip_level: usize) -> String {
+        if self.post_file_path == "/dev/null" {
+            self.ante_file_path.path_stripped_of_n_levels(strip_level)
+        } else {
+            self.ante_file_path.path_stripped_of_n_levels(strip_level)
+        }
     }
 
     pub fn iter_extras(&self) -> hash_map::Iter<String, (String, usize)> {
@@ -182,12 +191,20 @@ impl DiffPreamble {
         self.post_file_path.as_str()
     }
 
-    pub fn ante_file_path_buf(&self) -> PathBuf {
-        self.ante_file_path.clone().into()
+    pub fn get_ante_file_path(&self, strip_level: usize) -> String {
+        self.ante_file_path.path_stripped_of_n_levels(strip_level)
     }
 
-    pub fn post_file_path_buf(&self) -> PathBuf {
-        self.post_file_path.clone().into()
+    pub fn get_post_file_path(&self, strip_level: usize) -> String {
+        self.post_file_path.path_stripped_of_n_levels(strip_level)
+    }
+
+    pub fn get_file_path(&self, strip_level: usize) -> String {
+        if self.post_file_path == "/dev/null" {
+            self.ante_file_path.path_stripped_of_n_levels(strip_level)
+        } else {
+            self.ante_file_path.path_stripped_of_n_levels(strip_level)
+        }
     }
 }
 
@@ -262,6 +279,27 @@ impl Preamble {
         match self {
             Preamble::Git(preamble) => preamble.iter(),
             Preamble::Diff(preamble) => preamble.iter(),
+        }
+    }
+
+    pub fn get_ante_file_path(&self, strip_level: usize) -> String {
+        match self {
+            Preamble::Git(preamble) => preamble.get_ante_file_path(strip_level),
+            Preamble::Diff(preamble) => preamble.get_ante_file_path(strip_level),
+        }
+    }
+
+    pub fn get_post_file_path(&self, strip_level: usize) -> String {
+        match self {
+            Preamble::Git(preamble) => preamble.get_post_file_path(strip_level),
+            Preamble::Diff(preamble) => preamble.get_post_file_path(strip_level),
+        }
+    }
+
+    pub fn get_file_path(&self, strip_level: usize) -> String {
+        match self {
+            Preamble::Git(preamble) => preamble.get_file_path(strip_level),
+            Preamble::Diff(preamble) => preamble.get_file_path(strip_level),
         }
     }
 }

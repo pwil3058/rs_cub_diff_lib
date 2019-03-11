@@ -18,7 +18,6 @@
 
 use std::fmt;
 use std::io;
-use std::path::Path;
 
 use crate::lines::{
     first_inequality_fm_head, first_inequality_fm_tail, Line, LineIfce, Lines, LinesIfce,
@@ -184,7 +183,7 @@ impl AbstractDiff {
         lines: &Lines,
         reverse: bool,
         err_w: &mut W,
-        repd_file_path: Option<&Path>,
+        repd_file_path: Option<&str>,
     ) -> ApplnResult
     where
         W: io::Write,
@@ -226,7 +225,7 @@ impl AbstractDiff {
                 if let Some(file_path) = repd_file_path {
                     write!(
                         err_w,
-                        "{:?}: Hunk #{} merged at {}.\n",
+                        "{}: Hunk #{} merged at {}.\n",
                         file_path,
                         hunk_index + 1,
                         applied_posn
@@ -255,7 +254,7 @@ impl AbstractDiff {
                 if let Some(file_path) = repd_file_path {
                     write!(
                         err_w,
-                        "{:?}: Hunk #{} already applied at {}.\n",
+                        "{}: Hunk #{} already applied at {}.\n",
                         file_path,
                         hunk_index + 1,
                         applied_posn
@@ -278,7 +277,7 @@ impl AbstractDiff {
             {
                 // We've run out of lines to patch
                 if let Some(file_path) = repd_file_path {
-                    write!(err_w, "{:?}: Unexpected end of file: ", file_path).unwrap();
+                    write!(err_w, "{}: Unexpected end of file: ", file_path).unwrap();
                 } else {
                     write!(err_w, "Unexpected end of file: ").unwrap();
                 }
@@ -317,7 +316,7 @@ impl AbstractDiff {
             if let Some(file_path) = repd_file_path {
                 write!(
                     err_w,
-                    "{:?}: Hunk #{} NOT MERGED at {}-{}.\n",
+                    "{}: Hunk #{} NOT MERGED at {}-{}.\n",
                     file_path,
                     hunk_index + 1,
                     start_line,

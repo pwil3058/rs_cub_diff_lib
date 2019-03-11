@@ -45,6 +45,33 @@ impl Diff {
             Diff::GitPreambleOnly(diff) => MultiListIter::new(vec![diff.iter()]),
         }
     }
+
+    pub fn get_ante_file_path(&self, strip_level: usize) -> Option<String> {
+        match self {
+            Diff::Unified(diff) => Some(diff.get_ante_file_path(strip_level)),
+            Diff::Context(diff) => Some(diff.get_ante_file_path(strip_level)),
+            Diff::GitBinary(_) => None,
+            Diff::GitPreambleOnly(preamble) => Some(preamble.get_ante_file_path(strip_level)),
+        }
+    }
+
+    pub fn get_post_file_path(&self, strip_level: usize) -> Option<String> {
+        match self {
+            Diff::Unified(diff) => Some(diff.get_post_file_path(strip_level)),
+            Diff::Context(diff) => Some(diff.get_post_file_path(strip_level)),
+            Diff::GitBinary(_) => None,
+            Diff::GitPreambleOnly(preamble) => Some(preamble.get_post_file_path(strip_level)),
+        }
+    }
+
+    pub fn get_file_path(&self, strip_level: usize) -> Option<String> {
+        match self {
+            Diff::Unified(diff) => Some(diff.get_file_path(strip_level)),
+            Diff::Context(diff) => Some(diff.get_file_path(strip_level)),
+            Diff::GitBinary(_) => None,
+            Diff::GitPreambleOnly(preamble) => Some(preamble.get_file_path(strip_level)),
+        }
+    }
 }
 
 pub struct DiffParser {
@@ -107,6 +134,33 @@ impl DiffPlus {
 
     pub fn diff(&self) -> &Diff {
         &self.diff
+    }
+
+    pub fn get_ante_file_path(&self, strip_level: usize) -> String {
+        if let Some(ref preamble) = self.preamble {
+            preamble.get_ante_file_path(strip_level)
+        } else {
+            // unwrap() should be safe as binary patches always have a git preamble
+            self.diff.get_ante_file_path(strip_level).unwrap()
+        }
+    }
+
+    pub fn get_post_file_path(&self, strip_level: usize) -> String {
+        if let Some(ref preamble) = self.preamble {
+            preamble.get_post_file_path(strip_level)
+        } else {
+            // unwrap() should be safe as binary patches always have a git preamble
+            self.diff.get_post_file_path(strip_level).unwrap()
+        }
+    }
+
+    pub fn get_file_path(&self, strip_level: usize) -> String {
+        if let Some(ref preamble) = self.preamble {
+            preamble.get_file_path(strip_level)
+        } else {
+            // unwrap() should be safe as binary patches always have a git preamble
+            self.diff.get_file_path(strip_level).unwrap()
+        }
     }
 }
 

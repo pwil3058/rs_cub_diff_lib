@@ -18,6 +18,8 @@ extern crate regex;
 #[macro_use]
 extern crate lazy_static;
 
+extern crate pw_pathux;
+
 use std::slice::Iter;
 
 pub mod abstract_diff;

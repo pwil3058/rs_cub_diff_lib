@@ -16,10 +16,11 @@ use std::error::Error;
 use std::fmt;
 use std::io;
 use std::num::ParseIntError;
-use std::path::{Path, PathBuf};
 use std::slice::Iter;
 
 use regex::Captures;
+
+use pw_pathux::str_path::*;
 
 use crate::abstract_diff::{AbstractDiff, AbstractHunk, ApplnResult};
 use crate::git_binary_diff::git_delta::DeltaError;
@@ -64,7 +65,7 @@ pub type DiffParseResult<T> = Result<T, DiffParseError>;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct PathAndTimestamp {
-    file_path: PathBuf,
+    file_path: String,
     time_stamp: Option<String>,
 }
 
@@ -109,11 +110,31 @@ where
         MultiListIter::<Line>::new(list)
     }
 
-    pub fn get_file_path(&self) -> &PathBuf {
-        if self.header.post_pat.file_path != PathBuf::from("/dev/null") {
-            &self.header.post_pat.file_path
+    pub fn get_ante_file_path(&self, strip_level: usize) -> String {
+        self.header
+            .ante_pat
+            .file_path
+            .path_stripped_of_n_levels(strip_level)
+    }
+
+    pub fn get_post_file_path(&self, strip_level: usize) -> String {
+        self.header
+            .post_pat
+            .file_path
+            .path_stripped_of_n_levels(strip_level)
+    }
+
+    pub fn get_file_path(&self, strip_level: usize) -> String {
+        if self.header.post_pat.file_path != "/dev/null" {
+            self.header
+                .post_pat
+                .file_path
+                .path_stripped_of_n_levels(strip_level)
         } else {
-            &self.header.ante_pat.file_path
+            self.header
+                .ante_pat
+                .file_path
+                .path_stripped_of_n_levels(strip_level)
         }
     }
 
@@ -126,7 +147,7 @@ where
         lines: &Lines,
         reverse: bool,
         err_w: &mut W,
-        repd_file_path: Option<&Path>,
+        repd_file_path: Option<&str>,
     ) -> ApplnResult
     where
         W: io::Write,
@@ -145,7 +166,7 @@ where
         reader: &mut R,
         reverse: bool,
         err_w: &mut W,
-        repd_file_path: Option<&Path>,
+        repd_file_path: Option<&str>,
     ) -> DiffParseResult<ApplnResult>
     where
         R: io::Read,
@@ -169,14 +190,13 @@ pub trait TextDiffParser<H: TextDiffHunk> {
         } else {
             captures.get(3).unwrap().as_str() // TODO: confirm unwrap is OK here
         };
-        let file_path = PathBuf::from(file_path);
         let time_stamp = if let Some(ts) = captures.get(4) {
             Some(ts.as_str().to_string())
         } else {
             None
         };
         PathAndTimestamp {
-            file_path,
+            file_path: file_path.to_string(),
             time_stamp,
         }
     }
@@ -263,7 +283,6 @@ pub fn extract_source_lines<F: Fn(&Line) -> bool>(
 mod tests {
     use super::*;
     use regex::{Captures, Regex};
-    use std::path::PathBuf;
 
     use crate::abstract_diff::AbstractChunk;
     use crate::{ALT_TIMESTAMP_RE_STR, PATH_RE_STR, TIMESTAMP_RE_STR};
@@ -353,14 +372,14 @@ mod tests {
         assert_eq!(
             tdh.ante_pat,
             PathAndTimestamp {
-                file_path: PathBuf::from("a/path/to/original"),
+                file_path: String::from("a/path/to/original"),
                 time_stamp: None
             }
         );
         assert_eq!(
             tdh.post_pat,
             PathAndTimestamp {
-                file_path: PathBuf::from("b/path/to/new"),
+                file_path: String::from("b/path/to/new"),
                 time_stamp: None
             }
         );
