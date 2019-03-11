@@ -173,16 +173,21 @@ pub struct DiffPlusDisplay {}
 pub struct DiffPlusNotebook {
     notebook: gtk::Notebook,
     diff_plus_displays: RefCell<HashMap<String, DiffPlusDisplay>>,
+    strip_level: usize,
 }
 
 impl_widget_wrapper!(notebook: gtk::Notebook, DiffPlusNotebook);
 
 impl DiffPlusNotebook {
-    pub fn new() -> Rc<Self> {
-        Rc::new(Self{
+    pub fn new(strip_level: usize) -> Rc<Self> {
+        let dpn = Rc::new(Self{
             notebook: gtk::Notebook::new(),
             diff_plus_displays: RefCell::new(HashMap::<String, DiffPlusDisplay>::new()),
-        })
+            strip_level
+        });
+        dpn.notebook.popup_enable();
+
+        dpn
     }
 
     pub fn update(&self, _diff_pluses: &Vec<DiffPlus>) {
@@ -196,7 +201,7 @@ impl DiffPlusNotebook {
         self.diff_plus_displays.borrow_mut().clear();
         // Now create the new pages
         for diff_plus in diff_pluses.iter() {
-            //let file_path = diff_plus.get_file_path();
+            let file_path = diff_plus.get_file_path(self.strip_level);
         }
     }
 }
