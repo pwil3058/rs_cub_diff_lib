@@ -83,6 +83,8 @@ pub trait TextDiffHunk {
     fn ante_lines(&self) -> Lines;
     fn post_lines(&self) -> Lines;
 
+    fn adds_trailing_white_space(&self) -> bool;
+
     fn get_abstract_diff_hunk(&self) -> AbstractHunk;
 }
 
@@ -136,6 +138,15 @@ where
                 .file_path
                 .path_stripped_of_n_levels(strip_level)
         }
+    }
+
+    pub fn adds_trailing_white_space(&self) -> bool {
+        for hunk in self.hunks.iter() {
+            if hunk.adds_trailing_white_space() {
+                return true;
+            }
+        }
+        false
     }
 
     pub fn diff_format(&self) -> DiffFormat {

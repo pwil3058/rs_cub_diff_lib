@@ -18,6 +18,9 @@ use std::io::{self, BufReader, Read};
 use std::path::Path;
 pub use std::sync::Arc;
 
+use lazy_static;
+use regex::Regex;
+
 pub type Line = Arc<String>;
 pub type Lines = Vec<Line>;
 
@@ -37,9 +40,19 @@ pub trait LineIfce {
     fn conflict_end_marker() -> Line {
         Arc::new(String::from(">>>>>>>"))
     }
+
+    fn has_trailing_white_space(&self) -> bool;
 }
 
-impl LineIfce for Line {}
+lazy_static! {
+    static ref HAS_TWS_CRE: Regex = Regex::new(r"(\s+)\n?").unwrap();
+}
+
+impl LineIfce for Line {
+    fn has_trailing_white_space(&self) -> bool {
+        HAS_TWS_CRE.is_match(self)
+    }
+}
 
 pub trait LinesIfce {
     fn read<R: Read>(read: R) -> io::Result<Lines> {

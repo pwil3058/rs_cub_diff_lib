@@ -18,7 +18,7 @@ use std::str::FromStr;
 use regex::{Captures, Regex};
 
 use crate::abstract_diff::{AbstractChunk, AbstractHunk};
-use crate::lines::{Line, Lines};
+use crate::lines::{Line, LineIfce, Lines};
 use crate::text_diff::{
     extract_source_lines, DiffParseError, DiffParseResult, TextDiff, TextDiffHunk, TextDiffParser,
 };
@@ -64,6 +64,17 @@ impl TextDiffHunk for ContextDiffHunk {
         let start = self.post_chunk.offset;
         let end = self.post_chunk.offset + self.post_chunk.numlines;
         extract_source_lines(&self.lines[start..end], 2, |_| false)
+    }
+
+    fn adds_trailing_white_space(&self) -> bool {
+        let start = self.post_chunk.offset;
+        let end = self.post_chunk.offset + self.post_chunk.numlines;
+        for line in self.lines[start..end].iter() {
+            if (line.starts_with("+") || line.starts_with("!")) && line.has_trailing_white_space() {
+                return true
+            }
+        }
+        false
     }
 
     fn get_abstract_diff_hunk(&self) -> AbstractHunk {

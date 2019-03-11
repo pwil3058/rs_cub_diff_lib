@@ -72,6 +72,14 @@ impl Diff {
             Diff::GitPreambleOnly(preamble) => Some(preamble.get_file_path(strip_level)),
         }
     }
+
+    pub fn adds_trailing_white_space(&self) -> bool {
+        match self {
+            Diff::Unified(diff) => diff.adds_trailing_white_space(),
+            Diff::Context(diff) => diff.adds_trailing_white_space(),
+            _ => false,
+        }
+    }
 }
 
 pub struct DiffParser {
@@ -161,6 +169,10 @@ impl DiffPlus {
             // unwrap() should be safe as binary patches always have a git preamble
             self.diff.get_file_path(strip_level).unwrap()
         }
+    }
+
+    pub fn adds_trailing_white_space(&self) -> bool {
+        self.diff.adds_trailing_white_space()
     }
 }
 

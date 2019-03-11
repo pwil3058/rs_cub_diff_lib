@@ -20,7 +20,7 @@ use lcs::{DiffComponent, LcsTable};
 use regex::{Captures, Regex};
 
 use crate::abstract_diff::{AbstractChunk, AbstractHunk};
-use crate::lines::{Line, Lines};
+use crate::lines::{Line, LineIfce, Lines};
 use crate::text_diff::*;
 use crate::{DiffFormat, ALT_TIMESTAMP_RE_STR, PATH_RE_STR, TIMESTAMP_RE_STR};
 
@@ -91,6 +91,15 @@ impl TextDiffHunk for UnifiedDiffHunk {
 
     fn post_lines(&self) -> Lines {
         extract_source_lines(&self.lines[1..], 1, |l| l.starts_with("-"))
+    }
+
+    fn adds_trailing_white_space(&self) -> bool {
+        for line in self.lines[1..].iter() {
+            if line.starts_with("+") && line.has_trailing_white_space() {
+                return true
+            }
+        }
+        false
     }
 
     fn get_abstract_diff_hunk(&self) -> AbstractHunk {
