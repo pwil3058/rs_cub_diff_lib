@@ -23,7 +23,9 @@ use glib;
 use gtk;
 use gtk::prelude::*;
 
+use cub_diff_lib::context_diff::ContextDiff;
 use cub_diff_lib::diff::{Diff, DiffPlus};
+use cub_diff_lib::git_binary_diff::GitBinaryDiff;
 use cub_diff_lib::lines::*;
 use cub_diff_lib::preamble::*;
 use cub_diff_lib::text_diff::TextDiffHunk;
@@ -78,7 +80,7 @@ enum MarkupType {
     Post,
     Added,
     Removed,
-    Changed,
+    _Changed,
     Unchanged,
     AddedTWS,
     Stats,
@@ -95,7 +97,7 @@ macro_rules! markup_as {
             MarkupType::Post => format!("<span foreground=\"#008800\" face=\"monospace\">{}</span>", e_text),
             MarkupType::Removed => format!("<span foreground=\"#AA0000\" face=\"monospace\">{}</span>", e_text),
             MarkupType::Added => format!("<span foreground=\"#008800\" face=\"monospace\">{}</span>", e_text),
-            MarkupType::Changed => format!("<span foreground=\"#AA6600\" face=\"monospace\">{}</span>", e_text),
+            MarkupType::_Changed => format!("<span foreground=\"#AA6600\" face=\"monospace\">{}</span>", e_text),
             MarkupType::Unchanged => format!("<span foreground=\"#000000\" face=\"monospace\">{}</span>", e_text),
             MarkupType::AddedTWS => format!("<span background=\"#008800\" face=\"monospace\">{}</span>", e_text),
             MarkupType::Stats => format!("<span foreground=\"#AA00AA\" face=\"monospace\">{}</span>", e_text),
@@ -105,70 +107,19 @@ macro_rules! markup_as {
     }}
 }
 
-        //self.index_tag = self.create_tag("INDEX", weight=Pango.Weight.BOLD, foreground="#0000AA", face="monospace")
-        //self.sep_tag = self.create_tag("SEP", weight=Pango.Weight.BOLD, foreground="#0000AA", face="monospace")
-        //self.minus_tag = self.create_tag("MINUS", foreground="#AA0000", face="monospace")
-        //self.lab_tag = self.create_tag("LAB", foreground="#AA0000", face="monospace")
-        //self.plus_tag = self.create_tag("PLUS", foreground="#006600", face="monospace")
-        //self.added_tws_tag = self.create_tag("ADDED_TWS", background="#006600", face="monospace")
-        //self.star_tag = self.create_tag("STAR", foreground="#006600", face="monospace")
-        //self.rab_tag = self.create_tag("RAB", foreground="#006600", face="monospace")
-        //self.change_tag = self.create_tag("CHANGED", foreground="#AA6600", face="monospace")
-        //self.stats_tag = self.create_tag("STATS", foreground="#AA00AA", face="monospace")
-        //self.func_tag = self.create_tag("FUNC", foreground="#00AAAA", face="monospace")
-        //self.unchanged_tag = self.create_tag("UNCHANGED", foreground="black", face="monospace")
-
-
 pub trait DiffPlusTextBuffer: gtk::TextBufferExt {
     fn append_markup(&mut self, markup: &str) {
         self.insert_markup(&mut self.get_end_iter(), markup);
     }
 
-    fn append_diff_plus_line(&mut self, line: &str) -> usize {
-        use MarkupType::*;
-        let mut is_context_diff = false;
-        if line.starts_with(" ") {
-            self.append_markup(&markup_as!(Unchanged, line));
-        } else if line.starts_with("+") {
-            if let Some(captures) = TWS_CHECK_CRE.captures(line) {
-                let text = captures.get(1).unwrap().as_str();
-                self.append_markup(&markup_as!(Added, line));
-                self.append_markup(&markup_as!(AddedTWS, captures.get(2).unwrap().as_str()));
-                return text.len()
-            } else {
-                self.append_markup(&markup_as!(Added, line));
-            }
-        } else if line.starts_with("---") {
-            self.append_markup(&markup_as!(Removed, line));
-        } else if line.starts_with("-") {
-            self.append_markup(&markup_as!(Removed, line));
-        } else if line.starts_with("!") {
-            if let Some(captures) = TWS_CHECK_CRE.captures(line) {
-                let text = captures.get(1).unwrap().as_str();
-                self.append_markup(&markup_as!(Changed, line));
-                self.append_markup(&markup_as!(AddedTWS, captures.get(2).unwrap().as_str()));
-                return text.len()
-            } else {
-                self.append_markup(&markup_as!(Changed, line));
-            }
-        } else if line.starts_with("@") {
-            if let Some(i) = line.rfind("@@") {
-                self.append_markup(&markup_as!(Stats, &line[..i + 2]));
-                self.append_markup(&markup_as!(ContextAid, &line[i + 2..]));
-            } else {
-                self.append_markup(&markup_as!(Stats, line));
-            }
-        } else if line.starts_with("****") {
-            self.append_markup(&markup_as!(Separator, line));
-        } else if line.starts_with("***") {
-            self.append_markup(&markup_as!(Separator, line));
-            //self.append_markup(line, self.sep_tag)
-        //} else if line.starts_with("*") {
-            //self.append_markup(line, self.star_tag)
-        //} else {
-            //self.append_markup(line, self.index_tag)
+    fn append_added_line(&mut self, line: &str) {
+        if let Some(captures) = TWS_CHECK_CRE.captures(line) {
+            let text = captures.get(1).unwrap().as_str();
+            self.append_markup(&markup_as!(MarkupType::Added, text));
+            self.append_markup(&markup_as!(MarkupType::AddedTWS, captures.get(2).unwrap().as_str()));
+        } else {
+            self.append_markup(&markup_as!(MarkupType::Added, line));
         }
-        0
     }
 
     fn append_preamble(&mut self, preamble: &Preamble) {
@@ -196,6 +147,54 @@ pub trait DiffPlusTextBuffer: gtk::TextBufferExt {
             let i = first_line[2..].find("@@").unwrap();
             self.append_markup(&markup_as!(MarkupType::Stats, &first_line[..i + 4]));
             self.append_markup(&markup_as!(MarkupType::ContextAid, &first_line[i + 4..]));
+            for line in iter {
+                if line.starts_with("+") {
+                    self.append_added_line(&line);
+                } else if line.starts_with("-") {
+                    self.append_markup(&markup_as!(MarkupType::Removed, &line));
+                } else {
+                    self.append_markup(&markup_as!(MarkupType::Unchanged, &line));
+                }
+            }
+        }
+    }
+
+    fn append_context_diff(&mut self, context_diff: &ContextDiff) {
+        let ante_header_line = &context_diff.header().lines[0];
+        self.append_markup(&markup_as!(MarkupType::Ante, ante_header_line));
+        let post_header_line = &context_diff.header().lines[1];
+        self.append_markup(&markup_as!(MarkupType::Post, post_header_line));
+        for hunk in context_diff.hunks().iter() {
+            let mut iter = hunk.iter();
+            let first_line = iter.next().unwrap();
+            self.append_markup(&markup_as!(MarkupType::Separator, &first_line));
+            let mut in_post = false;
+            for line in iter {
+                if line.starts_with("***") {
+                    self.append_markup(&markup_as!(MarkupType::Ante, &line));
+                } else if line.starts_with("---") {
+                    in_post = true;
+                    self.append_markup(&markup_as!(MarkupType::Post, &line));
+                } else if line.starts_with("!") {
+                    if in_post {
+                        self.append_added_line(&line);
+                    } else {
+                        self.append_markup(&markup_as!(MarkupType::Removed, &line));
+                    }
+                } else if line.starts_with("+") {
+                    self.append_added_line(&line);
+                } else if line.starts_with("-") {
+                    self.append_markup(&markup_as!(MarkupType::Removed, &line));
+                } else {
+                    self.append_markup(&markup_as!(MarkupType::Unchanged, &line));
+                }
+            }
+        }
+    }
+
+    fn append_git_binary_diff(&mut self, git_binary_diff: &GitBinaryDiff) {
+        for line in git_binary_diff.iter() {
+            self.append_markup(&markup_as!(MarkupType::Unchanged, &line));
         }
     }
 }
@@ -225,8 +224,8 @@ impl DiffPlusDisplay {
         }
         match diff_plus.diff() {
             Diff::Unified(unified_diff) => buffer.append_unified_diff(&unified_diff),
-            Diff::Context(context_diff) => buffer.append_markup("<b>not yet implemented</b>"),
-            Diff::GitBinary(git_binary_diff) => buffer.append_markup("<b>not yet implemented</b>"),
+            Diff::Context(context_diff) => buffer.append_context_diff(&context_diff),
+            Diff::GitBinary(git_binary_diff) => buffer.append_git_binary_diff(&git_binary_diff),
             Diff::GitPreambleOnly(git_preamble) => buffer.append_git_preamble(&git_preamble),
         }
 
