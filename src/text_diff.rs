@@ -103,6 +103,14 @@ where
         self.lines_consumed
     }
 
+    pub fn header(&self) -> &TextDiffHeader {
+        &self.header
+    }
+
+    pub fn hunks(&self) -> &Vec<H> {
+        &self.hunks
+    }
+
     pub fn iter(&self) -> MultiListIter<Line> {
         let mut list = Vec::new();
         list.push(self.header.lines.iter());

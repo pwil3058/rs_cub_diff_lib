@@ -45,7 +45,7 @@ pub trait LineIfce {
 }
 
 lazy_static! {
-    static ref HAS_TWS_CRE: Regex = Regex::new(r"(\s+)\n?").unwrap();
+    static ref HAS_TWS_CRE: Regex = Regex::new(r"[ \t\f\v]+(\n)?$").unwrap();
 }
 
 impl LineIfce for Line {

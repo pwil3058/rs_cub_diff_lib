@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::io::Write;
+use std::sync::Arc;
+
+use crypto_hash::{Algorithm, Hasher};
+
 use crate::context_diff::{ContextDiff, ContextDiffParser};
 use crate::git_binary_diff::{GitBinaryDiff, GitBinaryDiffParser};
 use crate::lines::Line;
@@ -174,6 +179,19 @@ impl DiffPlus {
     pub fn adds_trailing_white_space(&self) -> bool {
         self.diff.adds_trailing_white_space()
     }
+
+    pub fn hash_digest(&self) -> Vec<u8> {
+        let mut hasher = Hasher::new(Algorithm::SHA256);
+        if let Some(preamble) = &self.preamble {
+            for line in preamble.iter() {
+                hasher.write_all(&line.as_bytes()).expect("hasher blew up!!!");
+            }
+        };
+        for line in self.diff.iter() {
+            hasher.write_all(&line.as_bytes()).expect("hasher blew up!!!");
+        }
+        hasher.finish()
+    }
 }
 
 pub struct DiffPlusParser {
@@ -221,13 +239,13 @@ impl DiffPlusParser {
         }
     }
 
-    pub fn parse_lines(&self, lines: &[Line]) -> DiffParseResult<Vec<DiffPlus>> {
+    pub fn parse_lines(&self, lines: &[Line]) -> DiffParseResult<Vec<Arc<DiffPlus>>> {
         let mut diff_pluses = vec![];
         let mut index = 0;
         while index < lines.len() {
             if let Some(diff_plus) = self.get_diff_plus_at(lines, index)? {
                 index += diff_plus.len();
-                diff_pluses.push(diff_plus);
+                diff_pluses.push(Arc::new(diff_plus));
             } else {
                 index += 1;
             }
