@@ -22,6 +22,7 @@ use regex::Regex;
 use glib;
 use gtk;
 use gtk::prelude::*;
+use gtk::RangeExt;
 
 use cub_diff_lib::context_diff::ContextDiff;
 use cub_diff_lib::diff::{Diff, DiffPlus};
@@ -204,20 +205,24 @@ impl DiffPlusTextBuffer for gtk::TextBuffer {}
 pub struct DiffPlusDisplay {
     v_box: gtk::Box,
     text_view: gtk::TextView,
+    sw: gtk::ScrolledWindow,
+    digest: RefCell<Vec<u8>>,
 }
 
 impl_widget_wrapper!(v_box: gtk::Box, DiffPlusDisplay);
 
 impl DiffPlusDisplay {
     pub fn new(diff_plus: &Arc<DiffPlus>) -> Rc<Self> {
+        let digest = diff_plus.hash_digest();
+        let nadj: Option<&gtk::Adjustment> = None;
         let dpp = Rc::new(Self {
             v_box: gtk::Box::new(gtk::Orientation::Vertical, 0),
             text_view: gtk::TextView::new(),
+            sw: gtk::ScrolledWindow::new(nadj, nadj),
+            digest: RefCell::new(digest),
         });
-        let nadj: Option<&gtk::Adjustment> = None;
-        let sw = gtk::ScrolledWindow::new(nadj, nadj);
-        sw.add(&dpp.text_view);
-        dpp.v_box.pack_start(&sw, true, true, 0);
+        dpp.sw.add(&dpp.text_view);
+        dpp.v_box.pack_start(&dpp.sw, true, true, 0);
         let mut buffer: gtk::TextBuffer = dpp.text_view.get_buffer().unwrap();
         if let Some(preamble) = diff_plus.preamble() {
             buffer.append_preamble(&preamble);
@@ -232,6 +237,58 @@ impl DiffPlusDisplay {
         dpp.v_box.show_all();
 
         dpp
+    }
+
+    pub fn update(&self, diff_plus: &Arc<DiffPlus>) {
+        let new_digest = diff_plus.hash_digest();
+        let needs_to_be_done = new_digest == *self.digest.borrow();
+        if needs_to_be_done {
+            *self.digest.borrow_mut() = new_digest;
+            // TODO: optomise scrollbar stuff
+            let h_pos = if let Some(sb) = self.sw.get_hscrollbar() {
+                if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>(){
+                    Some(sb.get_value())
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+            let v_pos = if let Some(sb) = self.sw.get_vscrollbar() {
+                if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>(){
+                    Some(sb.get_value())
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+            let mut buffer: gtk::TextBuffer = self.text_view.get_buffer().unwrap();
+            buffer.delete(&mut buffer.get_start_iter(), &mut buffer.get_end_iter());
+            if let Some(preamble) = diff_plus.preamble() {
+                buffer.append_preamble(&preamble);
+            }
+            match diff_plus.diff() {
+                Diff::Unified(unified_diff) => buffer.append_unified_diff(&unified_diff),
+                Diff::Context(context_diff) => buffer.append_context_diff(&context_diff),
+                Diff::GitBinary(git_binary_diff) => buffer.append_git_binary_diff(&git_binary_diff),
+                Diff::GitPreambleOnly(git_preamble) => buffer.append_git_preamble(&git_preamble),
+            }
+            if let Some(h_pos) = h_pos {
+                if let Some(sb) = self.sw.get_hscrollbar() {
+                    if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>(){
+                        sb.set_value(h_pos)
+                    }
+                }
+            };
+            if let Some(v_pos) = v_pos {
+                if let Some(sb) = self.sw.get_vscrollbar() {
+                    if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>(){
+                        sb.set_value(v_pos)
+                    }
+                }
+            };
+        }
     }
 }
 
