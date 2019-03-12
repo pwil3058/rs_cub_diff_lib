@@ -13,7 +13,7 @@
 //limitations under the License.
 
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use lazy_static;
@@ -332,7 +332,41 @@ impl DiffPlusNotebook {
         &self.tws_count_display
     }
 
-    pub fn update(&self, _diff_pluses: &Vec<Arc<DiffPlus>>) {
+    pub fn update(&self, diff_pluses: &Vec<Arc<DiffPlus>>) {
+        let mut existing = HashSet::new();
+        for file_path in self.diff_plus_displays.borrow().keys() {
+            existing.insert(file_path.to_string());
+        }
+        let mut added_tws_count = 0;
+        for diff_plus in diff_pluses.iter() {
+            let file_path = diff_plus.get_file_path(self.strip_level);
+            let adds_tws = diff_plus.adds_trailing_white_space();
+            if adds_tws {
+                added_tws_count += 1;
+            }
+            let tab_label = make_file_label(&file_path, adds_tws);
+            let menu_label = make_file_label(&file_path, adds_tws);
+            let mut diff_plus_displays = self.diff_plus_displays.borrow_mut();
+            if let Some(diff_plus_display) = diff_plus_displays.get(&file_path) {
+                diff_plus_display.update(&diff_plus);
+                self.notebook.set_tab_label(&diff_plus_display.pwo(), Some(&tab_label));
+                self.notebook.set_menu_label(&diff_plus_display.pwo(), Some(&menu_label));
+                existing.remove(&file_path);
+            } else {
+                let diff_plus_display = DiffPlusDisplay::new(&diff_plus);
+                self.notebook.append_page_menu(&diff_plus_display.pwo(), Some(&tab_label), Some(&menu_label));
+                diff_plus_displays.insert(file_path, diff_plus_display);
+            }
+        }
+        for gone_file_path in existing.drain() {
+            if let Some(diff_plus_display) = self.diff_plus_displays.borrow_mut().remove(&gone_file_path) {
+                if let Some(page_num) = self.notebook.page_num(&diff_plus_display.pwo()) {
+                    self.notebook.remove_page(page_num)
+                }
+            }
+        }
+        self.notebook.show_all();
+        self.tws_count_display.set_value(added_tws_count);
     }
 
     pub fn repopulate(&self, diff_pluses: &Vec<Arc<DiffPlus>>) {
