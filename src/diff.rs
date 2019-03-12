@@ -50,7 +50,7 @@ impl TwsCountDisplay {
         entry.set_editable(false);
         h_box.pack_start(&entry, false, false, 0);
         h_box.show_all();
-        let twslcd = Rc::new(Self{ h_box, entry });
+        let twslcd = Rc::new(Self { h_box, entry });
         twslcd.set_value(0);
 
         twslcd
@@ -93,19 +93,52 @@ macro_rules! markup_as {
     ( $mut:expr, $text:expr ) => {{
         let e_text = glib::markup_escape_text($text);
         match $mut {
-            MarkupType::Header => format!("<span weight=\"bold\" foreground=\"#0000AA\" face=\"monospace\">{}</span>", e_text),
-            MarkupType::Ante => format!("<span foreground=\"#AA0000\" face=\"monospace\">{}</span>", e_text),
-            MarkupType::Post => format!("<span foreground=\"#008800\" face=\"monospace\">{}</span>", e_text),
-            MarkupType::Removed => format!("<span foreground=\"#AA0000\" face=\"monospace\">{}</span>", e_text),
-            MarkupType::Added => format!("<span foreground=\"#008800\" face=\"monospace\">{}</span>", e_text),
-            MarkupType::_Changed => format!("<span foreground=\"#AA6600\" face=\"monospace\">{}</span>", e_text),
-            MarkupType::Unchanged => format!("<span foreground=\"#000000\" face=\"monospace\">{}</span>", e_text),
-            MarkupType::AddedTWS => format!("<span background=\"#008800\" face=\"monospace\">{}</span>", e_text),
-            MarkupType::Stats => format!("<span foreground=\"#AA00AA\" face=\"monospace\">{}</span>", e_text),
-            MarkupType::Separator => format!("<span weight=\"bold\" foreground=\"#0000AA\" face=\"monospace\">{}</span>", e_text),
-            MarkupType::ContextAid => format!("<span foreground=\"#00AAAA\" face=\"monospace\">{}</span>", e_text),
+            MarkupType::Header => format!(
+                "<span weight=\"bold\" foreground=\"#0000AA\" face=\"monospace\">{}</span>",
+                e_text
+            ),
+            MarkupType::Ante => format!(
+                "<span foreground=\"#AA0000\" face=\"monospace\">{}</span>",
+                e_text
+            ),
+            MarkupType::Post => format!(
+                "<span foreground=\"#008800\" face=\"monospace\">{}</span>",
+                e_text
+            ),
+            MarkupType::Removed => format!(
+                "<span foreground=\"#AA0000\" face=\"monospace\">{}</span>",
+                e_text
+            ),
+            MarkupType::Added => format!(
+                "<span foreground=\"#008800\" face=\"monospace\">{}</span>",
+                e_text
+            ),
+            MarkupType::_Changed => format!(
+                "<span foreground=\"#AA6600\" face=\"monospace\">{}</span>",
+                e_text
+            ),
+            MarkupType::Unchanged => format!(
+                "<span foreground=\"#000000\" face=\"monospace\">{}</span>",
+                e_text
+            ),
+            MarkupType::AddedTWS => format!(
+                "<span background=\"#008800\" face=\"monospace\">{}</span>",
+                e_text
+            ),
+            MarkupType::Stats => format!(
+                "<span foreground=\"#AA00AA\" face=\"monospace\">{}</span>",
+                e_text
+            ),
+            MarkupType::Separator => format!(
+                "<span weight=\"bold\" foreground=\"#0000AA\" face=\"monospace\">{}</span>",
+                e_text
+            ),
+            MarkupType::ContextAid => format!(
+                "<span foreground=\"#00AAAA\" face=\"monospace\">{}</span>",
+                e_text
+            ),
         }
-    }}
+    }};
 }
 
 pub trait DiffPlusTextBuffer: gtk::TextBufferExt {
@@ -117,7 +150,10 @@ pub trait DiffPlusTextBuffer: gtk::TextBufferExt {
         if let Some(captures) = TWS_CHECK_CRE.captures(line) {
             let text = captures.get(1).unwrap().as_str();
             self.append_markup(&markup_as!(MarkupType::Added, text));
-            self.append_markup(&markup_as!(MarkupType::AddedTWS, captures.get(2).unwrap().as_str()));
+            self.append_markup(&markup_as!(
+                MarkupType::AddedTWS,
+                captures.get(2).unwrap().as_str()
+            ));
         } else {
             self.append_markup(&markup_as!(MarkupType::Added, line));
         }
@@ -246,7 +282,7 @@ impl DiffPlusDisplay {
             *self.digest.borrow_mut() = new_digest;
             // TODO: optomise scrollbar stuff
             let h_pos = if let Some(sb) = self.sw.get_hscrollbar() {
-                if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>(){
+                if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>() {
                     Some(sb.get_value())
                 } else {
                     None
@@ -255,7 +291,7 @@ impl DiffPlusDisplay {
                 None
             };
             let v_pos = if let Some(sb) = self.sw.get_vscrollbar() {
-                if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>(){
+                if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>() {
                     Some(sb.get_value())
                 } else {
                     None
@@ -276,14 +312,14 @@ impl DiffPlusDisplay {
             }
             if let Some(h_pos) = h_pos {
                 if let Some(sb) = self.sw.get_hscrollbar() {
-                    if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>(){
+                    if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>() {
                         sb.set_value(h_pos)
                     }
                 }
             };
             if let Some(v_pos) = v_pos {
                 if let Some(sb) = self.sw.get_vscrollbar() {
-                    if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>(){
+                    if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>() {
                         sb.set_value(v_pos)
                     }
                 }
@@ -317,11 +353,11 @@ fn make_file_label(file_path: &str, adds_tws: bool) -> gtk::Box {
 
 impl DiffPlusNotebook {
     pub fn new(strip_level: usize) -> Rc<Self> {
-        let dpn = Rc::new(Self{
+        let dpn = Rc::new(Self {
             notebook: gtk::Notebook::new(),
             tws_count_display: TwsCountDisplay::new("#Files adding TWS:"),
             diff_plus_displays: RefCell::new(HashMap::<String, Rc<DiffPlusDisplay>>::new()),
-            strip_level
+            strip_level,
         });
         dpn.notebook.popup_enable();
 
@@ -349,17 +385,25 @@ impl DiffPlusNotebook {
             let mut diff_plus_displays = self.diff_plus_displays.borrow_mut();
             if let Some(diff_plus_display) = diff_plus_displays.get(&file_path) {
                 diff_plus_display.update(&diff_plus);
-                self.notebook.set_tab_label(&diff_plus_display.pwo(), Some(&tab_label));
-                self.notebook.set_menu_label(&diff_plus_display.pwo(), Some(&menu_label));
+                self.notebook
+                    .set_tab_label(&diff_plus_display.pwo(), Some(&tab_label));
+                self.notebook
+                    .set_menu_label(&diff_plus_display.pwo(), Some(&menu_label));
                 existing.remove(&file_path);
             } else {
                 let diff_plus_display = DiffPlusDisplay::new(&diff_plus);
-                self.notebook.append_page_menu(&diff_plus_display.pwo(), Some(&tab_label), Some(&menu_label));
+                self.notebook.append_page_menu(
+                    &diff_plus_display.pwo(),
+                    Some(&tab_label),
+                    Some(&menu_label),
+                );
                 diff_plus_displays.insert(file_path, diff_plus_display);
             }
         }
         for gone_file_path in existing.drain() {
-            if let Some(diff_plus_display) = self.diff_plus_displays.borrow_mut().remove(&gone_file_path) {
+            if let Some(diff_plus_display) =
+                self.diff_plus_displays.borrow_mut().remove(&gone_file_path)
+            {
                 if let Some(page_num) = self.notebook.page_num(&diff_plus_display.pwo()) {
                     self.notebook.remove_page(page_num)
                 }
@@ -387,8 +431,14 @@ impl DiffPlusNotebook {
             let tab_label = make_file_label(&file_path, adds_tws);
             let menu_label = make_file_label(&file_path, adds_tws);
             let diff_plus_display = DiffPlusDisplay::new(&diff_plus);
-            self.notebook.append_page_menu(&diff_plus_display.pwo(), Some(&tab_label), Some(&menu_label));
-            self.diff_plus_displays.borrow_mut().insert(file_path, diff_plus_display);
+            self.notebook.append_page_menu(
+                &diff_plus_display.pwo(),
+                Some(&tab_label),
+                Some(&menu_label),
+            );
+            self.diff_plus_displays
+                .borrow_mut()
+                .insert(file_path, diff_plus_display);
         }
         self.notebook.show_all();
         self.tws_count_display.set_value(added_tws_count);
