@@ -172,10 +172,6 @@ impl TextDiffParser<ContextDiffHunk> for ContextDiffParser {
         }
     }
 
-    fn diff_format(&self) -> DiffFormat {
-        DiffFormat::Context
-    }
-
     fn ante_file_rec<'t>(&self, line: &'t Line) -> Option<Captures<'t>> {
         self.ante_file_cre.captures(line)
     }

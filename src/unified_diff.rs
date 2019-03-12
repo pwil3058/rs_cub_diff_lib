@@ -231,10 +231,6 @@ impl TextDiffParser<UnifiedDiffHunk> for UnifiedDiffParser {
         }
     }
 
-    fn diff_format(&self) -> DiffFormat {
-        DiffFormat::Unified
-    }
-
     fn ante_file_rec<'t>(&self, line: &'t Line) -> Option<Captures<'t>> {
         self.ante_file_cre.captures(line)
     }

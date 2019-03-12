@@ -90,7 +90,6 @@ pub trait TextDiffHunk {
 
 pub struct TextDiff<H: TextDiffHunk> {
     lines_consumed: usize, // time saver
-    diff_format: DiffFormat,
     header: TextDiffHeader,
     hunks: Vec<H>,
 }
@@ -157,10 +156,6 @@ where
         false
     }
 
-    pub fn diff_format(&self) -> DiffFormat {
-        self.diff_format
-    }
-
     pub fn apply_to_lines<W>(
         &mut self,
         lines: &Lines,
@@ -198,7 +193,6 @@ where
 
 pub trait TextDiffParser<H: TextDiffHunk> {
     fn new() -> Self;
-    fn diff_format(&self) -> DiffFormat;
     fn ante_file_rec<'t>(&self, line: &'t Line) -> Option<Captures<'t>>;
     fn post_file_rec<'t>(&self, line: &'t Line) -> Option<Captures<'t>>;
     fn get_hunk_at(&self, lines: &[Line], index: usize) -> DiffParseResult<Option<H>>;
@@ -269,7 +263,6 @@ pub trait TextDiffParser<H: TextDiffHunk> {
         }
         let diff = TextDiff::<H> {
             lines_consumed: index - start_index,
-            diff_format: self.diff_format(),
             header: header,
             hunks: hunks,
         };
@@ -344,6 +337,10 @@ mod tests {
             };
             AbstractHunk::new(a1, a2)
         }
+
+        fn adds_trailing_white_space(&self) -> bool {
+            false
+        }
     }
 
     impl TextDiffParser<DummyDiffHunk> for DummyDiffParser {
@@ -358,10 +355,6 @@ mod tests {
                 ante_file_cre,
                 post_file_cre,
             }
-        }
-
-        fn diff_format(&self) -> DiffFormat {
-            DiffFormat::Unified
         }
 
         fn ante_file_rec<'t>(&self, line: &'t Line) -> Option<Captures<'t>> {
