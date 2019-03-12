@@ -22,6 +22,7 @@ extern crate gtk;
 extern crate pw_gix;
 
 pub mod diff;
+pub mod icons;
 
 #[cfg(test)]
 mod tests {
