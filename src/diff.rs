@@ -360,6 +360,8 @@ impl DiffPlusNotebook {
             strip_level,
         });
         dpn.notebook.popup_enable();
+        dpn.notebook.set_scrollable(true);
+        dpn.notebook.set_show_border(true);
 
         dpn
     }
