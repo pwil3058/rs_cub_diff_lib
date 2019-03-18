@@ -23,6 +23,7 @@ use glib;
 use gtk;
 use gtk::prelude::*;
 use gtk::RangeExt;
+use pango;
 
 use cub_diff_lib::context_diff::ContextDiff;
 use cub_diff_lib::diff::{Diff, DiffPlus};
@@ -60,12 +61,22 @@ impl TwsCountDisplay {
         let sval = val.to_string();
         self.entry.set_width_chars(sval.len() as i32);
         self.entry.set_text(&sval);
-        // TODO: set TWS background colours
-        //if val > 0 {
-        //    set background red ("#FF0000")
-        //} else {
-        //    set background green ("#00FF00")
-        //}
+        let new_foreground = if val > 0 {
+            pango::Attribute::new_foreground(0xFFFF, 0, 0)
+        } else {
+            pango::Attribute::new_foreground(0, 0xFFFF, 0)
+        };
+        if let Some(new_foreground) = new_foreground {
+            let new_attr_list = if let Some(attributes) = self.entry.get_attributes() {
+                attributes.change(new_foreground);
+                attributes
+            } else {
+                let attributes = pango::AttrList::new();
+                attributes.insert(new_foreground);
+                attributes
+            };
+            self.entry.set_attributes(&new_attr_list);
+        };
     }
 }
 
