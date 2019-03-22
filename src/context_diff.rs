@@ -71,7 +71,7 @@ impl TextDiffHunk for ContextDiffHunk {
         let end = self.post_chunk.offset + self.post_chunk.numlines;
         for line in self.lines[start..end].iter() {
             if (line.starts_with("+") || line.starts_with("!")) && line.has_trailing_white_space() {
-                return true
+                return true;
             }
         }
         false

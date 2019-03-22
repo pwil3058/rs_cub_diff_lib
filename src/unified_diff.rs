@@ -96,7 +96,7 @@ impl TextDiffHunk for UnifiedDiffHunk {
     fn adds_trailing_white_space(&self) -> bool {
         for line in self.lines[1..].iter() {
             if line.starts_with("+") && line.has_trailing_white_space() {
-                return true
+                return true;
             }
         }
         false

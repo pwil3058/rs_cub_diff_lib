@@ -184,11 +184,15 @@ impl DiffPlus {
         let mut hasher = Hasher::new(Algorithm::SHA256);
         if let Some(preamble) = &self.preamble {
             for line in preamble.iter() {
-                hasher.write_all(&line.as_bytes()).expect("hasher blew up!!!");
+                hasher
+                    .write_all(&line.as_bytes())
+                    .expect("hasher blew up!!!");
             }
         };
         for line in self.diff.iter() {
-            hasher.write_all(&line.as_bytes()).expect("hasher blew up!!!");
+            hasher
+                .write_all(&line.as_bytes())
+                .expect("hasher blew up!!!");
         }
         hasher.finish()
     }
