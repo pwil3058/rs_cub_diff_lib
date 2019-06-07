@@ -216,7 +216,7 @@ impl GitBinaryDiffParser {
         lines: &[Line],
         start_index: usize,
     ) -> DiffParseResult<Option<GitBinaryDiff>> {
-        if !self.start_cre.is_match(&lines[start_index]) {
+        if start_index >= lines.len() || !self.start_cre.is_match(&lines[start_index]) {
             return Ok(None);
         }
         let mut index = start_index + 1;
