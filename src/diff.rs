@@ -45,7 +45,7 @@ pub struct TwsCountDisplay {
 impl TwsCountDisplay {
     pub fn new(label: &str) -> Rc<Self> {
         let h_box = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        h_box.pack_start(&gtk::Label::new(label), false, false, 0);
+        h_box.pack_start(&gtk::Label::new(Some(label)), false, false, 0);
         let entry = gtk::Entry::new();
         entry.set_width_chars(1);
         entry.set_editable(false);
@@ -356,7 +356,7 @@ fn make_file_label(file_path: &str, adds_tws: bool) -> gtk::Box {
         icons::good_file_image(24)
     };
     hbox.pack_start(&image, false, true, 0);
-    let label = gtk::Label::new(file_path);
+    let label = gtk::Label::new(Some(file_path));
     hbox.pack_start(&label, true, true, 4);
     hbox.show_all();
     hbox
@@ -418,7 +418,7 @@ impl DiffPlusNotebook {
                 self.diff_plus_displays.borrow_mut().remove(&gone_file_path)
             {
                 if let Some(page_num) = self.notebook.page_num(&diff_plus_display.pwo()) {
-                    self.notebook.remove_page(page_num)
+                    self.notebook.remove_page(Some(page_num))
                 }
             }
         }
@@ -427,7 +427,6 @@ impl DiffPlusNotebook {
     }
 
     pub fn repopulate(&self, diff_pluses: &Vec<Arc<DiffPlus>>) {
-        use gtk::NotebookExtManual;
         // Clear all existing data/pages
         for child in self.notebook.get_children().iter() {
             self.notebook.remove(child);

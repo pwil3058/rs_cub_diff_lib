@@ -8,12 +8,12 @@ edition = "2018"
 lazy_static = "0.2.8"
 regex = "0.2"
 
-gdk-pixbuf = "0.6.0"
-gio = "0.6.0"
-glib = "0.7.0"
-gtk = "0.6.0"
-pango = "0.6.0"
-pango-sys = "0.8.0"
+gdk-pixbuf = "0.7.0"
+gio = "0.7.0"
+glib = "0.8.0"
+gtk = "0.7.0"
+pango = "0.7.0"
+pango-sys = "0.9.0"
 
 cub_diff_lib = { path = "../rs_cub_diff_lib.git"}
 pw_gix = { path = "../rs_pw_gix.git" }
