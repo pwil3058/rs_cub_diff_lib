@@ -275,9 +275,40 @@ impl TextDiffParser<UnifiedDiffHunk> for UnifiedDiffParser {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::lines::{Lines, LinesIfce};
+    use crate::text_diff::TextDiffParser;
+    use crate::unified_diff::UnifiedDiffParser;
     use std::path::Path;
+
+    static UNIFIED_DIFF: &str = "--- lao	2002-02-21 23:30:39.942229878 -0800
++++ tzu	2002-02-21 23:30:50.442260588 -0800
+@@ -1,7 +1,6 @@
+-The Way that can be told of is not the eternal Way;
+-The name that can be named is not the eternal name.
+ The Nameless is the origin of Heaven and Earth;
+-The Named is the mother of all things.
++The named is the mother of all things.
++
+ Therefore let there always be non-being,
+   so we may see their subtlety,
+ And let there always be being,
+@@ -9,3 +8,6 @@
+ The two are the same,
+ But after they are produced,
+   they have different names.
++They both may be called deep and profound.
++Deeper and more profound,
++The door of all subtleties!
+";
+
+    #[test]
+    fn unified_diff_parse() {
+        let diff_lines = Lines::from_string(UNIFIED_DIFF);
+        let parser = UnifiedDiffParser::new();
+        assert!(parser.get_diff_at(&diff_lines, 0).is_ok());
+        assert!(parser.get_diff_at(&diff_lines, 0).unwrap().is_some());
+        assert!(parser.get_diff_at(&diff_lines, 1).unwrap().is_none());
+    }
 
     #[test]
     fn get_unified_diff_at_works() {
