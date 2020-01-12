@@ -5,7 +5,7 @@ authors = ["Peter Williams <pwil3058@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-lazy_static = "0.2.8"
+lazy_static = "1.4.0"
 regex = "0.2"
 
 gdk-pixbuf = "0.7.0"
@@ -15,5 +15,5 @@ gtk = "0.7.0"
 pango = "0.7.0"
 pango-sys = "0.9.0"
 
-cub_diff_lib = { path = "../rs_cub_diff_lib.git"}
-pw_gix = { path = "../rs_pw_gix.git" }
+cub_diff_lib = { git = "https://github.com/pwil3058/rs_cub_diff_lib.git"}
+pw_gix = { git = "https://github.com/pwil3058/rs_pw_gix.git" }
