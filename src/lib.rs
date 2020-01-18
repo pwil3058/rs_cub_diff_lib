@@ -14,13 +14,6 @@
 
 #[macro_use]
 extern crate lazy_static;
-extern crate regex;
-
-extern crate gtk;
-extern crate pango;
-
-#[macro_use]
-extern crate pw_gix;
 
 pub mod diff;
 pub mod icons;

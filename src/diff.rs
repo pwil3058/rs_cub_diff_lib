@@ -37,6 +37,7 @@ use pw_gix::wrapper::*;
 
 use crate::icons;
 
+#[derive(PWO)]
 pub struct TwsCountDisplay {
     h_box: gtk::Box,
     entry: gtk::Entry,
@@ -79,8 +80,6 @@ impl TwsCountDisplay {
         };
     }
 }
-
-impl_widget_wrapper!(h_box: gtk::Box, TwsCountDisplay);
 
 lazy_static! {
     static ref TWS_CHECK_CRE: Regex = Regex::new(r"^([\+!].*\S)(\s+\n?)$").unwrap();
@@ -249,14 +248,13 @@ pub trait DiffPlusTextBuffer: gtk::TextBufferExt {
 
 impl DiffPlusTextBuffer for gtk::TextBuffer {}
 
+#[derive(PWO)]
 pub struct DiffPlusDisplay {
     v_box: gtk::Box,
     text_view: gtk::TextView,
     sw: gtk::ScrolledWindow,
     digest: RefCell<Vec<u8>>,
 }
-
-impl_widget_wrapper!(v_box: gtk::Box, DiffPlusDisplay);
 
 impl DiffPlusDisplay {
     pub fn new(diff_plus: &Arc<DiffPlus>) -> Rc<Self> {
@@ -339,14 +337,13 @@ impl DiffPlusDisplay {
     }
 }
 
+#[derive(PWO)]
 pub struct DiffPlusNotebook {
     notebook: gtk::Notebook,
     tws_count_display: Rc<TwsCountDisplay>,
     diff_plus_displays: RefCell<HashMap<String, Rc<DiffPlusDisplay>>>,
     strip_level: usize,
 }
-
-impl_widget_wrapper!(notebook: gtk::Notebook, DiffPlusNotebook);
 
 fn make_file_label(file_path: &str, adds_tws: bool) -> gtk::Box {
     let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
