@@ -40,7 +40,7 @@ impl TextDiffHunk for ContextDiffHunk {
         if self.ante_chunk.numlines == 1 {
             let start = self.post_chunk.offset;
             let end = self.post_chunk.offset + self.post_chunk.numlines;
-            extract_source_lines(&self.lines[start..end], 2, |l| l.starts_with("+"))
+            extract_source_lines(&self.lines[start..end], 2, |l| l.starts_with('+'))
         } else {
             let start = self.ante_chunk.offset;
             let end = self.ante_chunk.offset + self.ante_chunk.numlines;
@@ -58,7 +58,7 @@ impl TextDiffHunk for ContextDiffHunk {
         let start = self.post_chunk.offset;
         let end = self.post_chunk.offset + self.post_chunk.numlines;
         for line in self.lines[start..end].iter() {
-            if (line.starts_with("+") || line.starts_with("!")) && line.has_trailing_white_space() {
+            if (line.starts_with('+') || line.starts_with('!')) && line.has_trailing_white_space() {
                 return true;
             }
         }
@@ -145,6 +145,12 @@ impl ContextDiffParser {
     }
 }
 
+impl Default for ContextDiffParser {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TextDiffParser<ContextDiffHunk> for ContextDiffParser {
     fn new() -> ContextDiffParser {
         let e_ts_re_str = format!("({}|{})", TIMESTAMP_RE_STR, ALT_TIMESTAMP_RE_STR);
@@ -206,7 +212,7 @@ impl TextDiffParser<ContextDiffHunk> for ContextDiffParser {
         while post_count < post_sal.1 {
             if !(lines[index].starts_with("! ")
                 || lines[index].starts_with("+ ")
-                || lines[index].starts_with(" "))
+                || lines[index].starts_with(' '))
             {
                 if post_count == 0 {
                     break;

@@ -30,6 +30,10 @@ impl Diff {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn iter(&self) -> MultiListIter<Line> {
         match self {
             Diff::Unified(diff) => diff.iter(),
@@ -75,6 +79,7 @@ impl Diff {
     }
 }
 
+#[derive(Default)]
 pub struct DiffParser {
     context_diff_parser: ContextDiffParser,
     unified_diff_parser: UnifiedDiffParser,
@@ -119,6 +124,10 @@ impl DiffPlus {
         } else {
             self.diff.len()
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn iter(&self) -> MultiListIter<Line> {
@@ -186,6 +195,7 @@ impl DiffPlus {
     }
 }
 
+#[derive(Default)]
 pub struct DiffPlusParser {
     preamble_parser: PreambleParser,
     diff_parser: DiffParser,

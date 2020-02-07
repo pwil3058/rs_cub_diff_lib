@@ -66,8 +66,8 @@ pub trait LinesIfce {
     fn from_string(string: &str) -> Lines {
         let mut lines: Lines = vec![];
         let mut start_index = 0;
-        for (end_index, _) in string.match_indices("\n") {
-            lines.push(Arc::new(string[start_index..end_index + 1].to_string()));
+        for (end_index, _) in string.match_indices('\n') {
+            lines.push(Arc::new(string[start_index..=end_index].to_string()));
             start_index = end_index + 1;
         }
         if start_index < string.len() {
@@ -81,6 +81,29 @@ pub trait LinesIfce {
 
     // Find index of the first instance of "sub_lines" at or after "start_index"
     fn find_first_sub_lines(&self, sub_lines: &[Line], start_index: usize) -> Option<usize>;
+}
+
+impl LinesIfce for &[Line] {
+    fn contains_sub_lines_at(&self, sub_lines: &[Line], index: usize) -> bool {
+        if sub_lines.len() + index > self.len() {
+            return false;
+        }
+        for (line, sub_line) in self[index..index + sub_lines.len()].iter().zip(sub_lines) {
+            if line != sub_line {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn find_first_sub_lines(&self, sub_lines: &[Line], start_index: usize) -> Option<usize> {
+        for index in start_index..=start_index + self.len() - sub_lines.len() {
+            if self.contains_sub_lines_at(sub_lines, index) {
+                return Some(index);
+            }
+        }
+        None
+    }
 }
 
 impl LinesIfce for Lines {
@@ -97,7 +120,7 @@ impl LinesIfce for Lines {
     }
 
     fn find_first_sub_lines(&self, sub_lines: &[Line], start_index: usize) -> Option<usize> {
-        for index in start_index..start_index + self.len() - sub_lines.len() + 1 {
+        for index in start_index..=start_index + self.len() - sub_lines.len() {
             if self.contains_sub_lines_at(sub_lines, index) {
                 return Some(index);
             }
@@ -106,19 +129,17 @@ impl LinesIfce for Lines {
     }
 }
 
-pub fn first_inequality_fm_head(lines1: &Lines, lines2: &Lines) -> Option<usize> {
+pub fn first_inequality_fm_head(lines1: &[Line], lines2: &[Line]) -> Option<usize> {
     if let Some(index) = lines1.iter().zip(lines2.iter()).position(|(a, b)| a != b) {
         Some(index)
+    } else if lines1.len() == lines2.len() {
+        None
     } else {
-        if lines1.len() == lines2.len() {
-            None
-        } else {
-            Some(lines1.len().min(lines2.len()))
-        }
+        Some(lines1.len().min(lines2.len()))
     }
 }
 
-pub fn first_inequality_fm_tail(lines1: &Lines, lines2: &Lines) -> Option<usize> {
+pub fn first_inequality_fm_tail(lines1: &[Line], lines2: &[Line]) -> Option<usize> {
     if let Some(index) = lines1
         .iter()
         .rev()
@@ -126,14 +147,12 @@ pub fn first_inequality_fm_tail(lines1: &Lines, lines2: &Lines) -> Option<usize>
         .position(|(a, b)| a != b)
     {
         Some(index)
+    } else if lines1.len() > lines2.len() {
+        Some(lines1.len() - lines2.len())
+    } else if lines2.len() > lines1.len() {
+        Some(lines2.len() - lines1.len())
     } else {
-        if lines1.len() > lines2.len() {
-            Some(lines1.len() - lines2.len())
-        } else if lines2.len() > lines1.len() {
-            Some(lines2.len() - lines1.len())
-        } else {
-            None
-        }
+        None
     }
 }
 

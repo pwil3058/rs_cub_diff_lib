@@ -74,6 +74,10 @@ pub trait TextDiffHunk {
     fn adds_trailing_white_space(&self) -> bool;
 
     fn get_abstract_diff_hunk(&self) -> AbstractHunk;
+
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 pub struct TextDiff<H: TextDiffHunk> {
@@ -88,6 +92,10 @@ where
 {
     pub fn len(&self) -> usize {
         self.lines_consumed
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.lines_consumed == 0
     }
 
     pub fn header(&self) -> &TextDiffHeader {
@@ -146,7 +154,7 @@ where
 
     pub fn apply_to_lines<W>(
         &mut self,
-        lines: &Lines,
+        lines: &[Line],
         reverse: bool,
         err_w: &mut W,
         repd_file_path: Option<&str>,
@@ -174,7 +182,7 @@ where
         R: io::Read,
         W: io::Write,
     {
-        let lines = Lines::read(reader).map_err(|e| DiffParseError::IOError(e))?;
+        let lines = Lines::read(reader).map_err(DiffParseError::IOError)?;
         Ok(self.apply_to_lines(&lines, reverse, err_w, repd_file_path))
     }
 }
@@ -251,8 +259,8 @@ pub trait TextDiffParser<H: TextDiffHunk> {
         }
         let diff = TextDiff::<H> {
             lines_consumed: index - start_index,
-            header: header,
-            hunks: hunks,
+            header,
+            hunks,
         };
         Ok(Some(diff))
     }
@@ -265,14 +273,14 @@ pub fn extract_source_lines<F: Fn(&Line) -> bool>(
 ) -> Lines {
     let mut trimmed_lines: Lines = vec![];
     for (index, ref line) in lines.iter().enumerate() {
-        if skip(line) || line.starts_with("\\") {
+        if skip(line) || line.starts_with('\\') {
             continue;
         }
-        if (index + 1) == lines.len() || !lines[index + 1].starts_with("\\") {
+        if (index + 1) == lines.len() || !lines[index + 1].starts_with('\\') {
             trimmed_lines.push(Arc::new(line[trim_left_n..].to_string()));
         } else {
             trimmed_lines.push(Arc::new(
-                line[trim_left_n..].trim_end_matches("\n").to_string(),
+                line[trim_left_n..].trim_end_matches('\n').to_string(),
             ));
         }
     }

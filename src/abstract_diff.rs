@@ -7,9 +7,7 @@
 use std::fmt;
 use std::io;
 
-use crate::lines::{
-    first_inequality_fm_head, first_inequality_fm_tail, Line, LineIfce, Lines, LinesIfce,
-};
+use crate::lines::{first_inequality_fm_head, first_inequality_fm_tail, Line, LineIfce, LinesIfce};
 use crate::ApplyOffset;
 
 pub struct AbstractChunk {
@@ -23,7 +21,7 @@ impl AbstractChunk {
     }
 
     // Do "lines" match this chunk?
-    fn matches_lines(&self, lines: &Lines, offset: i64) -> bool {
+    fn matches_lines(&self, lines: &[Line], offset: i64) -> bool {
         let start_index = self.start_index.apply_offset(offset);
         lines.contains_sub_lines_at(&self.lines, start_index)
     }
@@ -48,8 +46,8 @@ impl AbstractHunk {
             first_inequality_fm_tail(&ante_chunk.lines, &post_chunk.lines).unwrap();
         AbstractHunk {
             chunk: [ante_chunk, post_chunk],
-            ante_context_len: ante_context_len,
-            post_context_len: post_context_len,
+            ante_context_len,
+            post_context_len,
         }
     }
 
@@ -86,13 +84,12 @@ impl AbstractHunk {
     // and any context reductions that were used.
     fn get_compromised_posn(
         &self,
-        lines: &Lines,
+        lines: &[Line],
         start_index: usize,
         fuzz_factor: usize,
         reverse: bool,
     ) -> Option<CompromisedPosnData> {
-        for context_redn in 0..fuzz_factor.min(self.ante_context_len.max(self.post_context_len)) + 1
-        {
+        for context_redn in 0..=fuzz_factor.min(self.ante_context_len.max(self.post_context_len)) {
             let ante_context_redn = context_redn.min(self.ante_context_len);
             let post_context_redn = context_redn.min(self.post_context_len);
             let fm = ante_context_redn;
@@ -124,7 +121,7 @@ impl AbstractHunk {
         AppliedPosnData { start_posn, length }
     }
 
-    fn is_already_applied(&self, lines: &Lines, offset: i64, reverse: bool) -> bool {
+    fn is_already_applied(&self, lines: &[Line], offset: i64, reverse: bool) -> bool {
         let (ante, post) = if reverse { (POST, ANTE) } else { (ANTE, POST) };
         let fr_offset = self.chunk[ante].start_index as i64 - self.chunk[post].start_index as i64;
         self.chunk[post].matches_lines(lines, fr_offset + offset)
@@ -168,7 +165,7 @@ impl AbstractDiff {
     // Apply this diff to lines
     pub fn apply_to_lines<W>(
         &self,
-        lines: &Lines,
+        lines: &[Line],
         reverse: bool,
         err_w: &mut W,
         repd_file_path: Option<&str>,
@@ -198,7 +195,7 @@ impl AbstractDiff {
                 for line in &lines[lines_index..cpd.start_index] {
                     result.lines.push(line.clone());
                 }
-                let end = &hunk.chunk[ante].lines.len() - cpd.post_context_redn;
+                let end = hunk.chunk[ante].lines.len() - cpd.post_context_redn;
                 for line in &hunk.chunk[ante].lines[cpd.ante_context_redn..end] {
                     result.lines.push(line.clone());
                 }
@@ -211,18 +208,18 @@ impl AbstractDiff {
                 let applied_posn =
                     hunk.get_applied_posn(result.lines.len(), cpd.post_context_redn, reverse);
                 if let Some(file_path) = repd_file_path {
-                    write!(
+                    writeln!(
                         err_w,
-                        "{}: Hunk #{} merged at {}.\n",
+                        "{}: Hunk #{} merged at {}.",
                         file_path,
                         hunk_index + 1,
                         applied_posn
                     )
                     .unwrap();
                 } else {
-                    write!(
+                    writeln!(
                         err_w,
-                        "Hunk #{} merged at {}.\n",
+                        "Hunk #{} merged at {}.",
                         hunk_index + 1,
                         applied_posn
                     )
@@ -240,18 +237,18 @@ impl AbstractDiff {
                 current_offset += hunk.length_diff(reverse);
                 let applied_posn = hunk.get_applied_posn(result.lines.len(), 0, reverse);
                 if let Some(file_path) = repd_file_path {
-                    write!(
+                    writeln!(
                         err_w,
-                        "{}: Hunk #{} already applied at {}.\n",
+                        "{}: Hunk #{} already applied at {}.",
                         file_path,
                         hunk_index + 1,
                         applied_posn
                     )
                     .unwrap();
                 } else {
-                    write!(
+                    writeln!(
                         err_w,
-                        "Hunk #{} already applied at {}.\n",
+                        "Hunk #{} already applied at {}.",
                         hunk_index + 1,
                         applied_posn
                     )
@@ -271,15 +268,15 @@ impl AbstractDiff {
                 }
                 let remaining_hunks = self.hunks.len() - hunk_index;
                 if remaining_hunks > 1 {
-                    write!(
+                    writeln!(
                         err_w,
-                        "Hunks #{}-{} could NOT be applied.\n",
+                        "Hunks #{}-{} could NOT be applied.",
                         hunk_index + 1,
                         self.hunks.len()
                     )
                     .unwrap()
                 } else {
-                    write!(err_w, "Hunk #{} could NOT be applied.\n", hunk_index + 1).unwrap()
+                    writeln!(err_w, "Hunk #{} could NOT be applied.", hunk_index + 1).unwrap()
                 }
                 result.failures += remaining_hunks as u64;
                 break;
@@ -302,9 +299,9 @@ impl AbstractDiff {
             result.lines.push(Line::conflict_end_marker());
             let end_line = result.lines.len();
             if let Some(file_path) = repd_file_path {
-                write!(
+                writeln!(
                     err_w,
-                    "{}: Hunk #{} NOT MERGED at {}-{}.\n",
+                    "{}: Hunk #{} NOT MERGED at {}-{}.",
                     file_path,
                     hunk_index + 1,
                     start_line,
@@ -312,9 +309,9 @@ impl AbstractDiff {
                 )
                 .unwrap();
             } else {
-                write!(
+                writeln!(
                     err_w,
-                    "Hunk #{} NOT MERGED at {}-{}.\n",
+                    "Hunk #{} NOT MERGED at {}-{}.",
                     hunk_index + 1,
                     start_line,
                     end_line

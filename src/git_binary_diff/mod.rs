@@ -61,13 +61,17 @@ impl GitBinaryDiffData {
         self.lines.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.lines.is_empty()
+    }
+
     pub fn iter(&self) -> Iter<Line> {
         self.lines.iter()
     }
 
     pub fn get_raw_data(&self) -> DiffParseResult<Vec<u8>> {
         let data = inflate::inflate_bytes_zlib(&self.data_zipped)
-            .map_err(|e| DiffParseError::ZLibInflateError(e))?;
+            .map_err(DiffParseError::ZLibInflateError)?;
         if data.len() != self.len_raw {
             let msg = format!(
                 "Inflated size {} doesn not match expected size {}",
@@ -86,7 +90,7 @@ impl GitBinaryDiffData {
                 panic!("allempt to use \"literal\" data as a \"delta\"")
             }
         };
-        git_delta::patch_delta(data, &delta).map_err(|e| DiffParseError::GitDeltaError(e))
+        git_delta::patch_delta(data, &delta).map_err(DiffParseError::GitDeltaError)
     }
 }
 
@@ -100,6 +104,10 @@ pub struct GitBinaryDiff {
 impl GitBinaryDiff {
     pub fn len(&self) -> usize {
         self.lines.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.lines.is_empty()
     }
 
     pub fn iter(&self) -> Iter<Line> {
@@ -119,9 +127,7 @@ impl GitBinaryDiff {
             match self.reverse.method {
                 GitBinaryDiffMethod::Delta => {
                     let mut data: Vec<u8> = Vec::new();
-                    let _ = reader
-                        .read(&mut data)
-                        .map_err(|e| DiffParseError::IOError(e))?;
+                    let _ = reader.read(&mut data).map_err(DiffParseError::IOError)?;
                     self.reverse.apply_delta(&data)
                 }
                 GitBinaryDiffMethod::Literal => self.reverse.get_raw_data(),
@@ -130,9 +136,7 @@ impl GitBinaryDiff {
             match self.forward.method {
                 GitBinaryDiffMethod::Delta => {
                     let mut data: Vec<u8> = Vec::new();
-                    let _ = reader
-                        .read(&mut data)
-                        .map_err(|e| DiffParseError::IOError(e))?;
+                    let _ = reader.read(&mut data).map_err(DiffParseError::IOError)?;
                     self.forward.apply_delta(&data)
                 }
                 GitBinaryDiffMethod::Literal => self.forward.get_raw_data(),
@@ -146,6 +150,12 @@ pub struct GitBinaryDiffParser {
     data_start_cre: Regex,
     blank_line_cre: Regex,
     data_line_cre: Regex,
+}
+
+impl Default for GitBinaryDiffParser {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl GitBinaryDiffParser {

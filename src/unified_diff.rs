@@ -74,16 +74,16 @@ impl TextDiffHunk for UnifiedDiffHunk {
     }
 
     fn ante_lines(&self) -> Lines {
-        extract_source_lines(&self.lines[1..], 1, |l| l.starts_with("+"))
+        extract_source_lines(&self.lines[1..], 1, |l| l.starts_with('+'))
     }
 
     fn post_lines(&self) -> Lines {
-        extract_source_lines(&self.lines[1..], 1, |l| l.starts_with("-"))
+        extract_source_lines(&self.lines[1..], 1, |l| l.starts_with('-'))
     }
 
     fn adds_trailing_white_space(&self) -> bool {
         for line in self.lines[1..].iter() {
-            if line.starts_with("+") && line.has_trailing_white_space() {
+            if line.starts_with('+') && line.has_trailing_white_space() {
                 return true;
             }
         }
@@ -103,7 +103,7 @@ impl TextDiffHunk for UnifiedDiffHunk {
         let ante_lines = self.ante_lines();
         let post_lines = self.post_lines();
         let ante_chunk = AbstractChunk {
-            start_index: if ante_lines.len() > 0 {
+            start_index: if !ante_lines.is_empty() {
                 self.ante_chunk.start_line_num - 1
             } else {
                 self.ante_chunk.start_line_num
@@ -186,9 +186,9 @@ impl From<&AbstractHunk> for UnifiedDiffHunk {
             }
         }
         UnifiedDiffHunk {
-            lines: lines,
-            ante_chunk: ante_chunk,
-            post_chunk: post_chunk,
+            lines,
+            ante_chunk,
+            post_chunk,
         }
     }
 }
@@ -197,6 +197,12 @@ pub struct UnifiedDiffParser {
     ante_file_cre: Regex,
     post_file_cre: Regex,
     hunk_data_cre: Regex,
+}
+
+impl Default for UnifiedDiffParser {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl TextDiffParser<UnifiedDiffHunk> for UnifiedDiffParser {
@@ -246,14 +252,14 @@ impl TextDiffParser<UnifiedDiffHunk> for UnifiedDiffParser {
             if index >= lines.len() {
                 return Err(DiffParseError::UnexpectedEndOfInput);
             }
-            if lines[index].starts_with("-") {
+            if lines[index].starts_with('-') {
                 ante_count += 1
-            } else if lines[index].starts_with("+") {
+            } else if lines[index].starts_with('+') {
                 post_count += 1
-            } else if lines[index].starts_with(" ") {
+            } else if lines[index].starts_with(' ') {
                 ante_count += 1;
                 post_count += 1
-            } else if !lines[index].starts_with("\\") {
+            } else if !lines[index].starts_with('\\') {
                 return Err(DiffParseError::UnexpectedEndHunk(
                     DiffFormat::Unified,
                     index,
@@ -261,7 +267,7 @@ impl TextDiffParser<UnifiedDiffHunk> for UnifiedDiffParser {
             }
             index += 1
         }
-        if index < lines.len() && lines[index].starts_with("\\") {
+        if index < lines.len() && lines[index].starts_with('\\') {
             index += 1
         }
         let hunk = UnifiedDiffHunk {

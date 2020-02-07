@@ -19,7 +19,7 @@ impl PatchHeader {
     pub fn new(lines: &[Line]) -> PatchHeader {
         let mut descr_starts_at = 0;
         for line in lines {
-            if !line.starts_with("#") {
+            if !line.starts_with('#') {
                 break;
             }
             descr_starts_at += 1;
@@ -80,6 +80,10 @@ impl Patch {
         self.length
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.length == 0
+    }
+
     pub fn iter(&self) -> MultiListIter<Line> {
         let mut mli = MultiListIter::<Line>::new(vec![self.header.iter()]);
         for (diff_plus, rubbish) in self.diff_pluses.iter().zip(self.rubbish.iter()) {
@@ -94,6 +98,7 @@ impl Patch {
     }
 }
 
+#[derive(Default)]
 pub struct PatchParser {
     diff_plus_parser: DiffPlusParser,
 }

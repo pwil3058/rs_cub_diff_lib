@@ -8,7 +8,7 @@ use crate::DiffFormat;
 
 const ENCODE: &[u8; 85] =
     b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~";
-const MAX_VAL: u64 = 0xFFFFFFFF;
+const MAX_VAL: u64 = 0xFFFF_FFFF;
 
 lazy_static! {
     static ref DECODE: HashMap<u8, u64> = {
@@ -46,7 +46,7 @@ pub fn encode(data: &[u8]) -> Encoding {
         string.append(&mut snippet);
     }
     Encoding {
-        string: string,
+        string,
         size: data.len(),
     }
 }
@@ -96,10 +96,10 @@ fn decode(encoding: &Encoding) -> DiffParseResult<Vec<u8>> {
 }
 
 pub fn decode_size(ch: u8) -> DiffParseResult<usize> {
-    if 'A' as u8 <= ch && ch <= 'Z' as u8 {
-        Ok((ch - 'A' as u8) as usize)
-    } else if 'a' as u8 <= ch && ch <= 'z' as u8 {
-        Ok((ch - 'a' as u8 + 27) as usize)
+    if b'A' <= ch && ch <= b'Z' {
+        Ok((ch - b'A') as usize)
+    } else if b'a' <= ch && ch <= b'z' {
+        Ok((ch - b'a' + 27) as usize)
     } else {
         Err(DiffParseError::UnexpectedInput(
             DiffFormat::GitBinary,

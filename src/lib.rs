@@ -52,7 +52,7 @@ pub struct MultiListIter<'a, T> {
 impl<'a, T> MultiListIter<'a, T> {
     pub fn new(iters: Vec<Iter<'a, T>>) -> MultiListIter<T> {
         MultiListIter {
-            iters: iters,
+            iters,
             current_iter: 0,
         }
     }

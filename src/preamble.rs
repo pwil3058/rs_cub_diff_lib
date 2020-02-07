@@ -13,6 +13,10 @@ use crate::PATH_RE_STR;
 pub trait PreambleIfce {
     fn len(&self) -> usize;
     fn iter(&self) -> Iter<Line>;
+
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 pub trait PreambleParserIfce<P: PreambleIfce> {
@@ -49,7 +53,7 @@ impl GitPreamble {
         if self.post_file_path == "/dev/null" {
             self.ante_file_path.path_stripped_of_n_levels(strip_level)
         } else {
-            self.ante_file_path.path_stripped_of_n_levels(strip_level)
+            self.post_file_path.path_stripped_of_n_levels(strip_level)
         }
     }
 
@@ -85,6 +89,12 @@ impl PreambleIfce for GitPreamble {
 pub struct GitPreambleParser {
     diff_cre: Regex,
     extras_cres: Vec<Regex>,
+}
+
+impl Default for GitPreambleParser {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PreambleParserIfce<GitPreamble> for GitPreambleParser {
@@ -136,10 +146,10 @@ impl PreambleParserIfce<GitPreamble> for GitPreambleParser {
         };
 
         let mut extras: HashMap<String, (String, usize)> = HashMap::new();
-        for index in start_index + 1..lines.len() {
+        for (index, line) in lines.iter().enumerate().skip(start_index + 1) {
             let mut found = false;
             for cre in self.extras_cres.iter() {
-                if let Some(captures) = cre.captures(&lines[index]) {
+                if let Some(captures) = cre.captures(line) {
                     extras.insert(
                         captures.get(1).unwrap().as_str().to_string(),
                         (
@@ -156,7 +166,7 @@ impl PreambleParserIfce<GitPreamble> for GitPreambleParser {
             }
         }
         Some(GitPreamble {
-            lines: lines[start_index..start_index + extras.len() + 1].to_vec(),
+            lines: lines[start_index..=start_index + extras.len()].to_vec(),
             ante_file_path,
             post_file_path,
             extras,
@@ -191,7 +201,7 @@ impl DiffPreamble {
         if self.post_file_path == "/dev/null" {
             self.ante_file_path.path_stripped_of_n_levels(strip_level)
         } else {
-            self.ante_file_path.path_stripped_of_n_levels(strip_level)
+            self.post_file_path.path_stripped_of_n_levels(strip_level)
         }
     }
 }
@@ -208,6 +218,12 @@ impl PreambleIfce for DiffPreamble {
 
 pub struct DiffPreambleParser {
     cre: Regex,
+}
+
+impl Default for DiffPreambleParser {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PreambleParserIfce<DiffPreamble> for DiffPreambleParser {
@@ -243,7 +259,7 @@ impl PreambleParserIfce<DiffPreamble> for DiffPreambleParser {
             captures.get(7).unwrap().as_str().to_string() // TODO: confirm unwrap is OK here
         };
         Some(DiffPreamble {
-            lines: lines[start_index..start_index + 1].to_vec(),
+            lines: lines[start_index..=start_index].to_vec(),
             ante_file_path,
             post_file_path,
         })
@@ -261,6 +277,10 @@ impl Preamble {
             Preamble::Git(preamble) => preamble.len(),
             Preamble::Diff(preamble) => preamble.len(),
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn iter(&self) -> Iter<Line> {
@@ -292,6 +312,7 @@ impl Preamble {
     }
 }
 
+#[derive(Default)]
 pub struct PreambleParser {
     git_preamble_parser: GitPreambleParser,
     diff_preamble_parser: DiffPreambleParser,

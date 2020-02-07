@@ -51,6 +51,10 @@ impl DiffStatsLines {
         self.lines.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.lines.is_empty()
+    }
+
     pub fn iter(&self) -> Iter<Line> {
         self.lines.iter()
     }
@@ -66,6 +70,12 @@ pub struct DiffStatParser {
     file_stats_cre: Regex,
     blank_line_cre: Regex,
     divider_line_cre: Regex,
+}
+
+impl Default for DiffStatParser {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl DiffStatParser {

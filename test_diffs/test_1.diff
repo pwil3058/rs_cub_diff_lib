@@ -114,8 +114,8 @@ index 9cf9459..d3bfed6 100644
              self.post_file_cre.captures(line)
          }
  
--        fn get_hunk_at(&self, _lines: &Lines, _index: usize) -> DiffParseResult<Option<i32>> {
-+        fn get_hunk_at(&self, _lines: &Lines, _index: usize) -> DiffParseResult<Option<TextDiffHunk<i32>>> {
+-        fn get_hunk_at(&self, _lines: &[Line], _index: usize) -> DiffParseResult<Option<i32>> {
++        fn get_hunk_at(&self, _lines: &[Line], _index: usize) -> DiffParseResult<Option<TextDiffHunk<i32>>> {
              Ok(None)
          }
      }
