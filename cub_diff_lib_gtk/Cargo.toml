@@ -1,5 +1,5 @@
 [package]
-name = "cub_diff_gui_lib"
+name = "cub_diff_lib_gtk"
 version = "0.1.0"
 authors = ["Peter Williams <pwil3058@gmail.com>"]
 edition = "2018"
@@ -15,5 +15,5 @@ gtk = "0.8.0"
 pango = "0.8.0"
 pango-sys = "0.9.0"
 
-cub_diff_lib = { git = "https://github.com/pwil3058/rs_cub_diff_lib.git"}
+cub_diff_lib = { path = "../cub_diff_lib"}
 pw_gix = { git = "https://github.com/pwil3058/rs_pw_gix.git" }
