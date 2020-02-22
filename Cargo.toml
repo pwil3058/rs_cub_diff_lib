@@ -1,5 +1,19 @@
-[workspace]
+[package]
+name = "cub_diff_gui_lib"
+version = "0.1.0"
+authors = ["Peter Williams <pwil3058@gmail.com>"]
+edition = "2018"
 
-members = [
-    "cub_diff_lib",
-]
+[dependencies]
+lazy_static = "1.4.0"
+regex = "0.2"
+
+gdk-pixbuf = "0.8.0"
+gio = "0.8.0"
+glib = "0.9.0"
+gtk = "0.8.0"
+pango = "0.8.0"
+pango-sys = "0.9.0"
+
+cub_diff_lib = { git = "https://github.com/pwil3058/rs_cub_diff_lib.git"}
+pw_gix = { git = "https://github.com/pwil3058/rs_pw_gix.git" }
