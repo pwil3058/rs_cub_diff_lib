@@ -238,7 +238,7 @@ mod tests {
 
     #[test]
     fn get_git_binary_diff_at_works() {
-        let lines = Lines::read_from(&Path::new("./test_diffs/test_2.binary_diff")).unwrap();
+        let lines = Lines::read_from(&Path::new("../test_diffs/test_2.binary_diff")).unwrap();
         let parser = GitBinaryDiffParser::new();
         let result = parser.get_diff_at(&lines, 1);
         assert!(result.is_ok());

@@ -318,7 +318,7 @@ mod tests {
 
     #[test]
     fn get_unified_diff_at_works() {
-        let lines = Lines::read_from(&Path::new("./test_diffs/test_1.diff")).unwrap();
+        let lines = Lines::read_from(&Path::new("../test_diffs/test_1.diff")).unwrap();
         let parser = UnifiedDiffParser::new();
         let result = parser.get_diff_at(&lines, 0);
         assert!(result.is_ok());

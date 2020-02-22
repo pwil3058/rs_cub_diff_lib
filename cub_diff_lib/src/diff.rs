@@ -265,7 +265,7 @@ mod tests {
 
     #[test]
     fn get_diff_plus_at_works_for_text_diffs() {
-        let lines = Lines::read_from(&Path::new("./test_diffs/test_1.diff")).unwrap();
+        let lines = Lines::read_from(&Path::new("../test_diffs/test_1.diff")).unwrap();
         let parser = DiffPlusParser::new();
         let result = parser.get_diff_plus_at(&lines, 0);
         assert!(result.is_ok());
@@ -281,7 +281,7 @@ mod tests {
 
     #[test]
     fn get_diff_plus_at_works_for_binary_diffs() {
-        let lines = Lines::read_from(&Path::new("./test_diffs/test_2.binary_diff")).unwrap();
+        let lines = Lines::read_from(&Path::new("../test_diffs/test_2.binary_diff")).unwrap();
         let parser = DiffPlusParser::new();
         let result = parser.get_diff_plus_at(&lines, 0);
         assert!(result.is_ok());
