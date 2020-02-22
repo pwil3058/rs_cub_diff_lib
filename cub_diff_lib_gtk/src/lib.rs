@@ -15,13 +15,8 @@
 #[macro_use]
 extern crate lazy_static;
 
+pub use cub_diff_lib;
+pub use pw_gix;
+
 pub mod diff;
 pub mod icons;
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}

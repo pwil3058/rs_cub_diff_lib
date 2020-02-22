@@ -3,4 +3,5 @@
 members = [
     "cub_diff_lib",
     "cub_diff_lib_gtk",
+    "test_gui_gtk"
 ]
