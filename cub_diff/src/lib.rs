@@ -77,6 +77,58 @@ pub mod lines {
             None
         }
     }
+
+    #[derive(Debug)]
+    pub struct CompleteLines<'a> {
+        string: &'a str,
+        start_index: usize,
+    }
+
+    impl<'a> CompleteLines<'a> {
+        pub fn new(string: &'a str) -> Self {
+            Self {
+                string,
+                start_index: 0,
+            }
+        }
+    }
+
+    impl<'a> Iterator for CompleteLines<'a> {
+        type Item = &'a str;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.start_index < self.string.len() {
+                let start_index = self.start_index;
+                let end_index = if let Some(offset_index) = self.string[start_index..].find('\n') {
+                    start_index + offset_index + 1
+                } else {
+                    self.string.len()
+                };
+                self.start_index = end_index;
+                Some(&self.string[start_index..end_index])
+            } else {
+                None
+            }
+        }
+    }
+
+    #[cfg(test)]
+    mod test {
+        use super::*;
+
+        #[test]
+        fn complete_lines() {
+            assert_eq!(CompleteLines::new("").count(), 0);
+            assert_eq!(CompleteLines::new("\n").count(), 1);
+            assert_eq!(CompleteLines::new("\n\n").count(), 2);
+            assert_eq!(CompleteLines::new("one").count(), 1);
+            assert_eq!(CompleteLines::new("one\n").count(), 1);
+            assert_eq!(CompleteLines::new("one\n").next(), Some("one\n"));
+            assert_eq!(CompleteLines::new("one\ntwo\n").count(), 2);
+            assert_eq!(CompleteLines::new("one\ntwo\n").next(), Some("one\n"));
+            assert_eq!(CompleteLines::new("one\ntwo\n").last(), Some("two\n"));
+        }
+    }
 }
 
 pub mod text_diff {
