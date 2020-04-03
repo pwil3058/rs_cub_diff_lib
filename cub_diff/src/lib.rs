@@ -100,12 +100,58 @@ pub mod text_diff {
         }
         trimmed_lines
     }
-}
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        fn lines_from_string(string: &str) -> Vec<&str> {
+            let mut lines: Vec<&str> = vec![];
+            let mut start_index = 0;
+            for (end_index, _) in string.match_indices('\n') {
+                lines.push(&string[start_index..=end_index]);
+                start_index = end_index + 1;
+            }
+            if start_index < string.len() {
+                lines.push(&string[start_index..]);
+            }
+            lines
+        }
+
+        #[test]
+        fn source_lines() {
+            let string = " #[derive(Debug)]
+ pub enum DiffParseError {
+     MissingAfterFileData(usize),
++    ParseNumberError(ParseIntError),
++    UnexpectedEndOfInput,
+-    CatchAll,
++    UnexpectedEndHunk(DiffFormat, usize),
++    SyntaxError(DiffFormat, usize),
+ }
+"
+            .to_string();
+            let lines = lines_from_string(&string);
+            let source_lines = extract_source_lines(&lines, 1, |l| l.starts_with('+'));
+            assert_eq!(source_lines.len(), 5);
+            assert_eq!(source_lines[0], "#[derive(Debug)]\n");
+            assert_eq!(source_lines[1], "pub enum DiffParseError {\n");
+            assert_eq!(source_lines[2], "    MissingAfterFileData(usize),\n");
+            assert_eq!(source_lines[3], "    CatchAll,\n");
+            assert_eq!(source_lines[4], "}\n");
+            let source_lines = extract_source_lines(&lines, 1, |l| l.starts_with('-'));
+            assert_eq!(source_lines.len(), 8);
+            assert_eq!(source_lines[0], "#[derive(Debug)]\n");
+            assert_eq!(source_lines[1], "pub enum DiffParseError {\n");
+            assert_eq!(source_lines[2], "    MissingAfterFileData(usize),\n");
+            assert_eq!(source_lines[3], "    ParseNumberError(ParseIntError),\n");
+            assert_eq!(source_lines[4], "    UnexpectedEndOfInput,\n");
+            assert_eq!(
+                source_lines[5],
+                "    UnexpectedEndHunk(DiffFormat, usize),\n"
+            );
+            assert_eq!(source_lines[6], "    SyntaxError(DiffFormat, usize),\n");
+            assert_eq!(source_lines[7], "}\n");
+        }
     }
 }
