@@ -112,6 +112,16 @@ pub mod lines {
         }
     }
 
+    pub trait CompleteLinesExt {
+        fn complete_lines(&self) -> CompleteLines;
+    }
+
+    impl CompleteLinesExt for String {
+        fn complete_lines(&self) -> CompleteLines {
+            CompleteLines::new(self)
+        }
+    }
+
     #[cfg(test)]
     mod test {
         use super::*;
@@ -127,6 +137,17 @@ pub mod lines {
             assert_eq!(CompleteLines::new("one\ntwo\n").count(), 2);
             assert_eq!(CompleteLines::new("one\ntwo\n").next(), Some("one\n"));
             assert_eq!(CompleteLines::new("one\ntwo\n").last(), Some("two\n"));
+        }
+
+        #[test]
+        fn complet_lines_ext() {
+            let string = "one\n\ntwo\nthree".to_string();
+            let mut iter = string.complete_lines();
+            assert_eq!(iter.next(), Some("one\n"));
+            assert_eq!(iter.next(), Some("\n"));
+            assert_eq!(iter.next(), Some("two\n"));
+            assert_eq!(iter.next(), Some("three"));
+            assert_eq!(iter.next(), None);
         }
     }
 }
