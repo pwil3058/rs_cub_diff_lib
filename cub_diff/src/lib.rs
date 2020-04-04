@@ -122,6 +122,12 @@ pub mod lines {
         }
     }
 
+    impl CompleteLinesExt for str {
+        fn complete_lines(&self) -> CompleteLines {
+            CompleteLines::new(self)
+        }
+    }
+
     #[cfg(test)]
     mod test {
         use super::*;
@@ -140,8 +146,19 @@ pub mod lines {
         }
 
         #[test]
-        fn complet_lines_ext() {
+        fn complet_lines_ext_string() {
             let string = "one\n\ntwo\nthree".to_string();
+            let mut iter = string.complete_lines();
+            assert_eq!(iter.next(), Some("one\n"));
+            assert_eq!(iter.next(), Some("\n"));
+            assert_eq!(iter.next(), Some("two\n"));
+            assert_eq!(iter.next(), Some("three"));
+            assert_eq!(iter.next(), None);
+        }
+
+        #[test]
+        fn complet_lines_ext_str() {
+            let string = "one\n\ntwo\nthree";
             let mut iter = string.complete_lines();
             assert_eq!(iter.next(), Some("one\n"));
             assert_eq!(iter.next(), Some("\n"));
