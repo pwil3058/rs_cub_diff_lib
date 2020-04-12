@@ -3,6 +3,8 @@
 #[macro_use]
 extern crate lazy_static;
 
+pub mod change;
+
 pub mod lines {
     use regex::Regex;
 
