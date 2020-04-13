@@ -21,11 +21,14 @@ impl<'a> Snippet<'a> {
         context: (usize, usize),
     ) -> Option<(usize, usize, usize)> {
         let adj_start_index = (self.start_index as isize + offset) as usize;
-        let to_index = self.lines.len() - context.1;
-        for fm_index in 0..context.0 {
-            if let Some(start_index) =
-                lines.find_first_sub_lines(&self.lines[fm_index..to_index], adj_start_index)
-            {
+        for head_redn in 0..context.0 {
+            for tail_redn in 0..context.1 {
+                let to_index = self.lines.len() - tail_redn;
+                if let Some(start_index) =
+                    lines.find_first_sub_lines(&self.lines[head_redn..to_index], adj_start_index)
+                {
+                    return Some((start_index, head_redn, tail_redn));
+                }
             }
         }
         None
