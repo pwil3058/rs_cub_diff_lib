@@ -1,6 +1,8 @@
 // Copyright 2020 Peter Williams <pwil3058@gmail.com> <pwil3058@bigpond.net.au>
 
-use crate::lines::{first_inequality_fm_head, first_inequality_fm_tail, LinesIfce};
+use crate::lines::{
+    first_inequality_fm_head, first_inequality_fm_tail, CompleteLinesExt, LinesIfce,
+};
 
 #[derive(Debug)]
 pub struct Snippet<'a> {
@@ -56,4 +58,38 @@ impl<'a, 'b> Change<'a, 'b> {
             tail_context_len,
         }
     }
+}
+
+#[derive(Debug, Default)]
+pub struct Changed {
+    string: String,
+    successes: u64,
+    merges: u64,
+    already_applied: u64,
+    failures: u64,
+}
+
+pub fn apply_changes(changes: &[Change], text: &str) -> Changed {
+    let lines: Vec<&str> = text.complete_lines().collect();
+    let mut changed = Changed::default();
+    let mut current_offset: isize = 0;
+    let mut lines_index: usize = 0;
+    for change in changes.iter() {
+        let ante = &change.ante_snippet;
+        let post = &change.post_snippet;
+        if ante.matches_lines(&lines, current_offset) {
+            let index = (ante.start_index as isize + current_offset) as usize;
+            for line in &lines[lines_index..index] {
+                changed.string += line;
+            }
+            for line in &post.lines {
+                changed.string += line;
+            }
+            lines_index =
+                (((ante.start_index + ante.lines.len()) as isize) + current_offset) as usize;
+            changed.successes += 1;
+            continue;
+        }
+    }
+    changed
 }
