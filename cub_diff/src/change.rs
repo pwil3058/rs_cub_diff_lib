@@ -122,24 +122,20 @@ pub fn apply_changes(changes: &[Change], text: &str) -> Changed {
             }
             lines_index = index + ante.lines.len();
             changed.successes += 1;
-            continue;
-        };
-        // if let Some((reduced_snippet, context_redn)) =
-        //     ante.match_lines_fuzzy(&lines, lines_index, &change.context)
-        // {
-        //     for line in &lines[lines_index..reduced_snippet.start_index] {
-        //         changed.string += line;
-        //     }
-        //     let end = post.lines.len() - context_redn.tail_len;
-        //     for line in &post.lines[context_redn.head_len..end] {
-        //         changed.string += line;
-        //     }
-        //     Broken
-        //     lines_index = reduced_snippet.start_index + end;
-        //     current_offset = reduced_snippet.start_index as isize - ante.start_index as isize;
-        //     changed.merges += 1;
-        //     continue;
-        // }
+        } else if let Some((reduced_snippet, context_redn)) =
+            ante.match_lines_fuzzy(&lines, lines_index, &change.context)
+        {
+            for line in &lines[lines_index..reduced_snippet.start_index] {
+                changed.string += line;
+            }
+            let end = post.lines.len() - context_redn.tail_len;
+            for line in &post.lines[context_redn.head_len..end] {
+                changed.string += line;
+            }
+            lines_index = reduced_snippet.start_index + reduced_snippet.lines.len();
+            current_offset = reduced_snippet.start_index as isize - ante.start_index as isize;
+            changed.merges += 1;
+        }
         // if let Some((index, head_context_redn, tail_context_redn)) = ante.match_lines_fuzzy(
         //     &lines,
         //     lines_index,
@@ -254,8 +250,13 @@ mod test {
             let change = Change::new(a.clone(), p.clone());
             changes.push(change);
         }
-        let changes = apply_changes(&changes, &ante_text);
-        assert_eq!(changes.string, post_text);
+        let changed = apply_changes(&changes, &ante_text);
+        assert_eq!(changed.string, post_text);
+        let changed = apply_changes(
+            &changes,
+            &"zero\none\ntwo\nthree\nfour\nmove\nfive\nsix\nseven\neight\nnine\nten\neleven\ntwelve",
+        );
+        assert_eq!(changed.string, "zero\none\ntwo\nthree mod\nfour\nmove\nfive\nextra\nsix\nseven\neight mod\nnine mod\nten\neleven\ntwelve\nextra\n");
         //assert!(false);
     }
 
@@ -311,8 +312,13 @@ mod test {
             let change = Change::new(a.clone(), p.clone());
             changes.push(change);
         }
-        let changes = apply_changes(&changes, &ante_text);
-        assert_eq!(changes.string, post_text);
+        let changed = apply_changes(&changes, &ante_text);
+        assert_eq!(changed.string, post_text);
+        let changed = apply_changes(
+            &changes,
+            &"zero\none\ntwo\nthree\nfour\nmove\nfive\nsix\nseven\neight\nnine\nten\neleven\ntwelve\nthirteen\nfourteen\n",
+        );
+        assert_eq!(changed.string, "zero\none\ntwo\nthree mod\nfour\nmove\nfive\nextra\nsix\nseven\neight mod\nnine mod\nten\neleven\ntwelve\nextra\nthirteen\nfourteen\n");
         //assert!(false);
     }
 }
