@@ -1,6 +1,6 @@
 // Copyright 2019 Peter Williams <pwil3058@gmail.com> <pwil3058@bigpond.net.au>
 
-use gtk::prelude::*;
+use pw_gix::gtk::{self, prelude::*};
 
 use cub_diff_lib_gtk::{
     cub_diff_lib::{

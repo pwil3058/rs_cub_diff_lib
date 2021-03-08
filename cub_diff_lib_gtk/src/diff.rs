@@ -19,11 +19,11 @@ use std::rc::Rc;
 use lazy_static;
 use regex::Regex;
 
-use glib;
-use gtk;
-use gtk::prelude::*;
-use gtk::RangeExt;
-use pango;
+use pw_gix::glib;
+use pw_gix::gtk;
+use pw_gix::gtk::prelude::*;
+use pw_gix::gtk::RangeExt;
+use pw_gix::pango;
 
 use cub_diff_lib::context_diff::ContextDiff;
 use cub_diff_lib::diff::{Diff, DiffPlus};

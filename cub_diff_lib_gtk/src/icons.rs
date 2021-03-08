@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use gdk_pixbuf;
-use gtk;
+use pw_gix::gdk_pixbuf;
+use pw_gix::gtk;
 
 // XPM
 static GOOD_FILE_XPM: &[&str] = &[
@@ -100,14 +100,14 @@ static GOOD_FILE_XPM: &[&str] = &[
 ];
 
 pub fn good_file_pixbuf() -> gdk_pixbuf::Pixbuf {
-    gdk_pixbuf::Pixbuf::new_from_xpm_data(GOOD_FILE_XPM)
+    gdk_pixbuf::Pixbuf::from_xpm_data(GOOD_FILE_XPM)
 }
 
 pub fn good_file_image(size: i32) -> gtk::Image {
     if let Some(pixbuf) =
         good_file_pixbuf().scale_simple(size, size, gdk_pixbuf::InterpType::Bilinear)
     {
-        gtk::Image::new_from_pixbuf(Some(&pixbuf))
+        gtk::Image::from_pixbuf(Some(&pixbuf))
     } else {
         panic!("File: {:?} Line: {:?}", file!(), line!())
     }
@@ -198,14 +198,14 @@ static BAD_FILE_XPM: &[&str] = &[
 ];
 
 pub fn bad_file_pixbuf() -> gdk_pixbuf::Pixbuf {
-    gdk_pixbuf::Pixbuf::new_from_xpm_data(BAD_FILE_XPM)
+    gdk_pixbuf::Pixbuf::from_xpm_data(BAD_FILE_XPM)
 }
 
 pub fn bad_file_image(size: i32) -> gtk::Image {
     if let Some(pixbuf) =
         bad_file_pixbuf().scale_simple(size, size, gdk_pixbuf::InterpType::Bilinear)
     {
-        gtk::Image::new_from_pixbuf(Some(&pixbuf))
+        gtk::Image::from_pixbuf(Some(&pixbuf))
     } else {
         panic!("File: {:?} Line: {:?}", file!(), line!())
     }
