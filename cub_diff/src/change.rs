@@ -101,6 +101,7 @@ pub struct Changed {
     successes: u64,
     merges: u64,
     already_applied: u64,
+    already_merged: u64,
     failures: u64,
 }
 
@@ -135,45 +136,58 @@ pub fn apply_changes(changes: &[Change], text: &str) -> Changed {
             lines_index = reduced_snippet.start_index + reduced_snippet.lines.len();
             current_offset = reduced_snippet.start_index as isize - ante.start_index as isize;
             changed.merges += 1;
+        } else if post.matches_lines(&lines, current_offset) {
+            // already applied
+            lines_index += post.lines.len();
+            current_offset += post.lines.len() as isize - ante.lines.len() as isize;
+            changed.already_applied += 1;
+        } else if let Some((reduced_snippet, context_redn)) =
+            post.match_lines_fuzzy(&lines, lines_index, &change.context)
+        {
+            // already merged
+            lines_index = reduced_snippet.start_index + reduced_snippet.lines.len();
+            current_offset = reduced_snippet.start_index as isize
+                - context_redn.head_len as isize
+                - post.start_index as isize;
+            changed.already_merged += 1;
+            // } else if let Some((index, head_context_redn, tail_context_redn)) =
+            //     ante.match_lines_fuzzy(&lines, lines_index, &change.context)
+            // {
+            //     for line in &lines[lines_index..index] {
+            //         changed.string += line;
+            //     }
+            //     let end = ante.lines.len() - tail_context_redn;
+            //     for line in &ante.lines[head_context_redn..end] {
+            //         changed.string += line;
+            //     }
+            //     lines_index = index.copy() + ante.lines.len() - head_context_redn - tail_context_redn;
+            //     current_offset =
+            //         index as isize - ante.start_index as isize - head_context_redn as isize;
+            //     let applied_posn =
+            //         hunk.get_applied_posn(result.lines.len(), cpd.post_context_redn, reverse);
+            //     if let Some(file_path) = repd_file_path {
+            //         writeln!(
+            //             err_w,
+            //             "{}: Hunk #{} merged at {}.",
+            //             file_path,
+            //             hunk_index + 1,
+            //             applied_posn
+            //         )
+            //         .unwrap();
+            //     } else {
+            //         writeln!(
+            //             err_w,
+            //             "Hunk #{} merged at {}.",
+            //             hunk_index + 1,
+            //             applied_posn
+            //         )
+            //         .unwrap();
+            //     }
+            //     result.merges += 1;
+            //     continue;
+        } else {
+            // unresolved situation
         }
-        // if let Some((index, head_context_redn, tail_context_redn)) = ante.match_lines_fuzzy(
-        //     &lines,
-        //     lines_index,
-        //     (change.head_context_len, change.tail_context_len),
-        // ) {
-        //     for line in &lines[lines_index..index] {
-        //         changed.string += line;
-        //     }
-        //     let end = ante.lines.len() - tail_context_redn;
-        //     for line in &ante.lines[head_context_redn..end] {
-        //         changed.string += line;
-        //     }
-        //     lines_index = index + ante.lines.len() - head_context_redn - tail_context_redn;
-        //     current_offset =
-        //         index as isize - ante.start_index as isize - head_context_redn as isize;
-        //     let applied_posn =
-        //         hunk.get_applied_posn(result.lines.len(), cpd.post_context_redn, reverse);
-        //     if let Some(file_path) = repd_file_path {
-        //         writeln!(
-        //             err_w,
-        //             "{}: Hunk #{} merged at {}.",
-        //             file_path,
-        //             hunk_index + 1,
-        //             applied_posn
-        //         )
-        //         .unwrap();
-        //     } else {
-        //         writeln!(
-        //             err_w,
-        //             "Hunk #{} merged at {}.",
-        //             hunk_index + 1,
-        //             applied_posn
-        //         )
-        //         .unwrap();
-        //     }
-        //     result.merges += 1;
-        //     continue;
-        // }
     }
     for line in lines[lines_index..].iter() {
         changed.string += line;
