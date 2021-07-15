@@ -64,28 +64,28 @@ impl Context {
 
 impl From<(&[&str], &[&str])> for Context {
     fn from(lines: (&[&str], &[&str])) -> Self {
-        let head_len = first_inequality_fm_head(lines.0, lines.1).expect("programmer erroe");
-        let tail_len = first_inequality_fm_tail(lines.0, lines.1).expect("programmer erroe");
+        let head_len = first_inequality_fm_head(lines.0, lines.1).expect("programmer error");
+        let tail_len = first_inequality_fm_tail(lines.0, lines.1).expect("programmer error");
         Self { head_len, tail_len }
     }
 }
 impl From<(&Vec<&str>, &Vec<&str>)> for Context {
     fn from(lines: (&Vec<&str>, &Vec<&str>)) -> Self {
-        let head_len = first_inequality_fm_head(&lines.0, &lines.1).expect("programmer erroe");
-        let tail_len = first_inequality_fm_tail(&lines.0, &lines.1).expect("programmer erroe");
+        let head_len = first_inequality_fm_head(&lines.0, &lines.1).expect("programmer error");
+        let tail_len = first_inequality_fm_tail(&lines.0, &lines.1).expect("programmer error");
         Self { head_len, tail_len }
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct Change<'a, 'b> {
+pub struct Change<'a> {
     ante_snippet: Snippet<'a>,
-    post_snippet: Snippet<'b>,
+    post_snippet: Snippet<'a>,
     context: Context,
 }
 
-impl<'a, 'b> Change<'a, 'b> {
-    pub fn new(ante_snippet: Snippet<'a>, post_snippet: Snippet<'b>) -> Self {
+impl<'a> Change<'a> {
+    pub fn new(ante_snippet: Snippet<'a>, post_snippet: Snippet<'a>) -> Self {
         let context = Context::from((&ante_snippet.lines, &post_snippet.lines));
         Self {
             ante_snippet,
