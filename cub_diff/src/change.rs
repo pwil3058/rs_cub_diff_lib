@@ -110,7 +110,7 @@ pub fn apply_changes(changes: &[Change], text: &str) -> Changed {
     let mut changed = Changed::default();
     let mut current_offset: isize = 0;
     let mut lines_index: usize = 0;
-    for change in changes.iter() {
+    for (change_index, change) in changes.iter().enumerate() {
         let ante = &change.ante_snippet;
         let post = &change.post_snippet;
         if ante.matches_lines(&lines, current_offset) {
@@ -150,43 +150,22 @@ pub fn apply_changes(changes: &[Change], text: &str) -> Changed {
                 - context_redn.head_len as isize
                 - post.start_index as isize;
             changed.already_merged += 1;
-            // } else if let Some((index, head_context_redn, tail_context_redn)) =
-            //     ante.match_lines_fuzzy(&lines, lines_index, &change.context)
-            // {
-            //     for line in &lines[lines_index..index] {
-            //         changed.string += line;
-            //     }
-            //     let end = ante.lines.len() - tail_context_redn;
-            //     for line in &ante.lines[head_context_redn..end] {
-            //         changed.string += line;
-            //     }
-            //     lines_index = index.copy() + ante.lines.len() - head_context_redn - tail_context_redn;
-            //     current_offset =
-            //         index as isize - ante.start_index as isize - head_context_redn as isize;
-            //     let applied_posn =
-            //         hunk.get_applied_posn(result.lines.len(), cpd.post_context_redn, reverse);
-            //     if let Some(file_path) = repd_file_path {
-            //         writeln!(
-            //             err_w,
-            //             "{}: Hunk #{} merged at {}.",
-            //             file_path,
-            //             hunk_index + 1,
-            //             applied_posn
-            //         )
-            //         .unwrap();
-            //     } else {
-            //         writeln!(
-            //             err_w,
-            //             "Hunk #{} merged at {}.",
-            //             hunk_index + 1,
-            //             applied_posn
-            //         )
-            //         .unwrap();
-            //     }
-            //     result.merges += 1;
-            //     continue;
+        } else if lines_index < lines.len() {
+            // TODO: this needs to be smarter
+            changed.string += "<<<<<<<\n";
+            for line in &ante.lines {
+                changed.string += line;
+            }
+            changed.string += "=======\n";
+            for line in &post.lines {
+                changed.string += line;
+            }
+            changed.string += ">>>>>>>\n";
+            changed.failures += 1;
         } else {
-            // unresolved situation
+            // unexpected end of file
+            changed.failures += (changes.len() - change_index) as u64;
+            break;
         }
     }
     for line in lines[lines_index..].iter() {
