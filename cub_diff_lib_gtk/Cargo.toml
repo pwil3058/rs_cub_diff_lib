@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 lazy_static = "1.4.0"
-regex = "0.2"
+regex = "1"
 
 cub_diff_lib = { path = "../cub_diff_lib"}
 pw_gix = { git = "https://github.com/pwil3058/rs_pw_gix.git" }
