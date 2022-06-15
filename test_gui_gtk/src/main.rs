@@ -21,7 +21,7 @@ fn main() {
     let diff_pluses = diff_plus_parser.parse_lines(&lines).unwrap();
     diff_notebook.repopulate(&diff_pluses);
     diff_notebook.pwo().show_all();
-    win.add(&diff_notebook.pwo());
+    win.add(diff_notebook.pwo());
     win.connect_destroy(|_| gtk::main_quit());
     win.show();
     gtk::main()

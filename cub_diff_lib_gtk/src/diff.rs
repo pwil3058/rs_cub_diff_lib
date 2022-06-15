@@ -396,14 +396,14 @@ impl DiffPlusNotebook {
             if let Some(diff_plus_display) = diff_plus_displays.get(&file_path) {
                 diff_plus_display.update(&diff_plus);
                 self.notebook
-                    .set_tab_label(&diff_plus_display.pwo(), Some(&tab_label));
+                    .set_tab_label(diff_plus_display.pwo(), Some(&tab_label));
                 self.notebook
-                    .set_menu_label(&diff_plus_display.pwo(), Some(&menu_label));
+                    .set_menu_label(diff_plus_display.pwo(), Some(&menu_label));
                 existing.remove(&file_path);
             } else {
                 let diff_plus_display = DiffPlusDisplay::new(&diff_plus);
                 self.notebook.append_page_menu(
-                    &diff_plus_display.pwo(),
+                    diff_plus_display.pwo(),
                     Some(&tab_label),
                     Some(&menu_label),
                 );
@@ -414,7 +414,7 @@ impl DiffPlusNotebook {
             if let Some(diff_plus_display) =
                 self.diff_plus_displays.borrow_mut().remove(&gone_file_path)
             {
-                if let Some(page_num) = self.notebook.page_num(&diff_plus_display.pwo()) {
+                if let Some(page_num) = self.notebook.page_num(diff_plus_display.pwo()) {
                     self.notebook.remove_page(Some(page_num))
                 }
             }
@@ -441,7 +441,7 @@ impl DiffPlusNotebook {
             let menu_label = make_file_label(&file_path, adds_tws);
             let diff_plus_display = DiffPlusDisplay::new(&diff_plus);
             self.notebook.append_page_menu(
-                &diff_plus_display.pwo(),
+                diff_plus_display.pwo(),
                 Some(&tab_label),
                 Some(&menu_label),
             );
