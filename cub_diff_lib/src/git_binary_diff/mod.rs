@@ -40,8 +40,7 @@ impl FromStr for GitBinaryDiffMethod {
             _ => Err(DiffParseError::UnexpectedInput(
                 DiffFormat::GitBinary,
                 format!(
-                    "{}: unknown method expected \"delta\" or \"literal\"",
-                    string
+                    "{string}: unknown method expected \"delta\" or \"literal\""
                 ),
             )),
         }
@@ -238,11 +237,11 @@ mod tests {
 
     #[test]
     fn get_git_binary_diff_at_works() {
-        let lines = Lines::read_from(&Path::new("../test_diffs/test_2.binary_diff")).unwrap();
+        let lines = Lines::read_from(Path::new("../test_diffs/test_2.binary_diff")).unwrap();
         let parser = GitBinaryDiffParser::new();
         let result = parser.get_diff_at(&lines, 1);
         assert!(result.is_ok());
-        assert!(!result.unwrap().is_some());
+        assert!(result.unwrap().is_none());
 
         for start_index in &[2, 12, 21, 30, 39, 49] {
             let result = parser.get_diff_at(&lines, *start_index);

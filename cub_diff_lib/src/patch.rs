@@ -28,7 +28,7 @@ impl PatchHeader {
         let mut index = descr_starts_at;
         let parser = DiffStatParser::new();
         while index < lines.len() {
-            diff_stats_range = parser.get_summary_line_range_at(&lines, index);
+            diff_stats_range = parser.get_summary_line_range_at(lines, index);
             if diff_stats_range.is_some() {
                 break;
             }
@@ -152,7 +152,7 @@ mod tests {
 
     #[test]
     fn patch_parse_lines_works_text_only() {
-        let lines = Lines::read_from(&Path::new("../test_diffs/test_1.diff")).unwrap();
+        let lines = Lines::read_from(Path::new("../test_diffs/test_1.diff")).unwrap();
         let lines_length = lines.len();
         let parser = PatchParser::new();
         let result = parser.parse_lines(&lines);
@@ -171,7 +171,7 @@ mod tests {
 
     #[test]
     fn patch_parse_lines_works_binary_only() {
-        let lines = Lines::read_from(&Path::new("../test_diffs/test_2.binary_diff")).unwrap();
+        let lines = Lines::read_from(Path::new("../test_diffs/test_2.binary_diff")).unwrap();
         let lines_length = lines.len();
         let parser = PatchParser::new();
         let result = parser.parse_lines(&lines);

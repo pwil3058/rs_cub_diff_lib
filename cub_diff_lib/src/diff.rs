@@ -182,13 +182,13 @@ impl DiffPlus {
         if let Some(preamble) = &self.preamble {
             for line in preamble.iter() {
                 hasher
-                    .write_all(&line.as_bytes())
+                    .write_all(line.as_bytes())
                     .expect("hasher blew up!!!");
             }
         };
         for line in self.diff.iter() {
             hasher
-                .write_all(&line.as_bytes())
+                .write_all(line.as_bytes())
                 .expect("hasher blew up!!!");
         }
         hasher.finish()
@@ -265,7 +265,7 @@ mod tests {
 
     #[test]
     fn get_diff_plus_at_works_for_text_diffs() {
-        let lines = Lines::read_from(&Path::new("../test_diffs/test_1.diff")).unwrap();
+        let lines = Lines::read_from(Path::new("../test_diffs/test_1.diff")).unwrap();
         let parser = DiffPlusParser::new();
         let result = parser.get_diff_plus_at(&lines, 0);
         assert!(result.is_ok());
@@ -281,7 +281,7 @@ mod tests {
 
     #[test]
     fn get_diff_plus_at_works_for_binary_diffs() {
-        let lines = Lines::read_from(&Path::new("../test_diffs/test_2.binary_diff")).unwrap();
+        let lines = Lines::read_from(Path::new("../test_diffs/test_2.binary_diff")).unwrap();
         let parser = DiffPlusParser::new();
         let result = parser.get_diff_plus_at(&lines, 0);
         assert!(result.is_ok());

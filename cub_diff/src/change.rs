@@ -57,7 +57,7 @@ impl Context {
         self.head_len + self.tail_len
     }
 
-    pub fn empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 }

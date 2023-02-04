@@ -180,9 +180,9 @@ impl From<&AbstractHunk> for UnifiedDiffHunk {
         let lcs_table = LcsTable::new(&abs_ante_chunk.lines, &abs_post_chunk.lines);
         for diff_component in lcs_table.diff() {
             match diff_component {
-                DiffComponent::Insertion(line) => lines.push(Line::new(format!("+{}", line))),
-                DiffComponent::Unchanged(line, _) => lines.push(Line::new(format!(" {}", line))),
-                DiffComponent::Deletion(line) => lines.push(Line::new(format!("-{}", line))),
+                DiffComponent::Insertion(line) => lines.push(Line::new(format!("+{line}"))),
+                DiffComponent::Unchanged(line, _) => lines.push(Line::new(format!(" {line}"))),
+                DiffComponent::Deletion(line) => lines.push(Line::new(format!("-{line}"))),
             }
         }
         UnifiedDiffHunk {
@@ -207,12 +207,12 @@ impl Default for UnifiedDiffParser {
 
 impl TextDiffParser<UnifiedDiffHunk> for UnifiedDiffParser {
     fn new() -> Self {
-        let e_ts_re_str = format!("({}|{})", TIMESTAMP_RE_STR, ALT_TIMESTAMP_RE_STR);
+        let e_ts_re_str = format!("({TIMESTAMP_RE_STR}|{ALT_TIMESTAMP_RE_STR})");
 
-        let e = format!(r"^--- ({})(\s+{})?(.*)(\n)?$", PATH_RE_STR, e_ts_re_str);
+        let e = format!(r"^--- ({PATH_RE_STR})(\s+{e_ts_re_str})?(.*)(\n)?$");
         let ante_file_cre = Regex::new(&e).unwrap();
 
-        let e = format!(r"^\+\+\+ ({})(\s+{})?(.*)(\n)?$", PATH_RE_STR, e_ts_re_str);
+        let e = format!(r"^\+\+\+ ({PATH_RE_STR})(\s+{e_ts_re_str})?(.*)(\n)?$");
         let post_file_cre = Regex::new(&e).unwrap();
 
         let hunk_data_cre =
@@ -318,11 +318,11 @@ mod tests {
 
     #[test]
     fn get_unified_diff_at_works() {
-        let lines = Lines::read_from(&Path::new("../test_diffs/test_1.diff")).unwrap();
+        let lines = Lines::read_from(Path::new("../test_diffs/test_1.diff")).unwrap();
         let parser = UnifiedDiffParser::new();
         let result = parser.get_diff_at(&lines, 0);
         assert!(result.is_ok());
-        assert!(!result.unwrap().is_some());
+        assert!(result.unwrap().is_none());
 
         let result = parser.get_diff_at(&lines, 14);
         assert!(result.is_ok());

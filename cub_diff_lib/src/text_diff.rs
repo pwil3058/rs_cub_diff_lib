@@ -165,7 +165,7 @@ where
         let hunks = self
             .hunks
             .iter()
-            .map(|ref h| h.get_abstract_diff_hunk())
+            .map(|h| h.get_abstract_diff_hunk())
             .collect();
         let abstract_diff = AbstractDiff::new(hunks);
         abstract_diff.apply_to_lines(lines, reverse, err_w, repd_file_path)
@@ -199,11 +199,7 @@ pub trait TextDiffParser<H: TextDiffHunk> {
         } else {
             captures.get(3).unwrap().as_str() // TODO: confirm unwrap is OK here
         };
-        let time_stamp = if let Some(ts) = captures.get(4) {
-            Some(ts.as_str().to_string())
-        } else {
-            None
-        };
+        let time_stamp = captures.get(4).map(|ts| ts.as_str().to_string());
         PathAndTimestamp {
             file_path: file_path.to_string(),
             time_stamp,
@@ -242,7 +238,7 @@ pub trait TextDiffParser<H: TextDiffHunk> {
             return Ok(None);
         }
         let mut index = start_index;
-        let header = if let Some(header) = self.get_text_diff_header_at(&lines, index)? {
+        let header = if let Some(header) = self.get_text_diff_header_at(lines, index)? {
             index += header.lines.len();
             header
         } else {
@@ -250,7 +246,7 @@ pub trait TextDiffParser<H: TextDiffHunk> {
         };
         let mut hunks: Vec<H> = Vec::new();
         while index < lines.len() {
-            if let Some(hunk) = self.get_hunk_at(&lines, index)? {
+            if let Some(hunk) = self.get_hunk_at(lines, index)? {
                 index += hunk.len();
                 hunks.push(hunk);
             } else {
@@ -272,7 +268,7 @@ pub fn extract_source_lines<F: Fn(&Line) -> bool>(
     skip: F,
 ) -> Lines {
     let mut trimmed_lines: Lines = vec![];
-    for (index, ref line) in lines.iter().enumerate() {
+    for (index, line) in lines.iter().enumerate() {
         if skip(line) || line.starts_with('\\') {
             continue;
         }
@@ -341,11 +337,11 @@ mod tests {
 
     impl TextDiffParser<DummyDiffHunk> for DummyDiffParser {
         fn new() -> Self {
-            let e_ts_re_str = format!("({}|{})", TIMESTAMP_RE_STR, ALT_TIMESTAMP_RE_STR);
-            let e = format!(r"^--- ({})(\s+{})?(.*)(\n)?$", PATH_RE_STR, e_ts_re_str);
+            let e_ts_re_str = format!("({TIMESTAMP_RE_STR}|{ALT_TIMESTAMP_RE_STR})");
+            let e = format!(r"^--- ({PATH_RE_STR})(\s+{e_ts_re_str})?(.*)(\n)?$");
             let ante_file_cre = Regex::new(&e).unwrap();
-            let e_ts_re_str = format!("({}|{})", TIMESTAMP_RE_STR, ALT_TIMESTAMP_RE_STR);
-            let e = format!(r"^\+\+\+ ({})(\s+{})?(.*)(\n)?$", PATH_RE_STR, e_ts_re_str);
+            let e_ts_re_str = format!("({TIMESTAMP_RE_STR}|{ALT_TIMESTAMP_RE_STR})");
+            let e = format!(r"^\+\+\+ ({PATH_RE_STR})(\s+{e_ts_re_str})?(.*)(\n)?$");
             let post_file_cre = Regex::new(&e).unwrap();
             DummyDiffParser {
                 ante_file_cre,

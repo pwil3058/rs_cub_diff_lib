@@ -153,9 +153,9 @@ impl Default for ContextDiffParser {
 
 impl TextDiffParser<ContextDiffHunk> for ContextDiffParser {
     fn new() -> ContextDiffParser {
-        let e_ts_re_str = format!("({}|{})", TIMESTAMP_RE_STR, ALT_TIMESTAMP_RE_STR);
-        let ante_file_cre_str = format!(r"^\*\*\* ({})(\s+{})?(\n)?$", PATH_RE_STR, e_ts_re_str);
-        let post_file_cre_str = format!(r"^--- ({})(\s+{})?(\n)?$", PATH_RE_STR, e_ts_re_str);
+        let e_ts_re_str = format!("({TIMESTAMP_RE_STR}|{ALT_TIMESTAMP_RE_STR})");
+        let ante_file_cre_str = format!(r"^\*\*\* ({PATH_RE_STR})(\s+{e_ts_re_str})?(\n)?$");
+        let post_file_cre_str = format!(r"^--- ({PATH_RE_STR})(\s+{e_ts_re_str})?(\n)?$");
 
         ContextDiffParser {
             ante_file_cre: Regex::new(&ante_file_cre_str).unwrap(),

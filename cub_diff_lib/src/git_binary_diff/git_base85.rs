@@ -72,15 +72,13 @@ fn decode(encoding: &Encoding) -> DiffParseResult<Vec<u8>> {
                 s_index += 1;
             } else {
                 return Err(DiffParseError::Base85Error(format!(
-                    "{0}: base85 source access out of range.",
-                    s_index
+                    "{s_index}: base85 source access out of range."
                 )));
             }
         }
         if acc > MAX_VAL {
             return Err(DiffParseError::Base85Error(format!(
-                "{0}: base85 accumulator overflow.",
-                acc
+                "{acc}: base85 accumulator overflow."
             )));
         }
         for _ in 0..4 {
@@ -96,9 +94,9 @@ fn decode(encoding: &Encoding) -> DiffParseResult<Vec<u8>> {
 }
 
 pub fn decode_size(ch: u8) -> DiffParseResult<usize> {
-    if b'A' <= ch && ch <= b'Z' {
+    if (b'A'..=b'Z').contains(&ch) {
         Ok((ch - b'A') as usize)
-    } else if b'a' <= ch && ch <= b'z' {
+    } else if (b'a'..=b'z').contains(&ch) {
         Ok((ch - b'a' + 27) as usize)
     } else {
         Err(DiffParseError::UnexpectedInput(
@@ -115,7 +113,7 @@ pub fn decode_line(line: &Line) -> DiffParseResult<Vec<u8>> {
         string: string[1..].to_vec(),
         size,
     };
-    Ok(decode(&encoding)?)
+    decode(&encoding)
 }
 
 pub fn decode_lines(lines: &[Line]) -> DiffParseResult<Vec<u8>> {

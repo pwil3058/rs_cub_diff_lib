@@ -97,12 +97,7 @@ impl LinesIfce for &[Line] {
     }
 
     fn find_first_sub_lines(&self, sub_lines: &[Line], start_index: usize) -> Option<usize> {
-        for index in start_index..=start_index + self.len() - sub_lines.len() {
-            if self.contains_sub_lines_at(sub_lines, index) {
-                return Some(index);
-            }
-        }
-        None
+        (start_index..=start_index + self.len() - sub_lines.len()).find(|&index| self.contains_sub_lines_at(sub_lines, index))
     }
 }
 
@@ -120,12 +115,7 @@ impl LinesIfce for Lines {
     }
 
     fn find_first_sub_lines(&self, sub_lines: &[Line], start_index: usize) -> Option<usize> {
-        for index in start_index..=start_index + self.len() - sub_lines.len() {
-            if self.contains_sub_lines_at(sub_lines, index) {
-                return Some(index);
-            }
-        }
-        None
+        (start_index..=start_index + self.len() - sub_lines.len()).find(|&index| self.contains_sub_lines_at(sub_lines, index))
     }
 }
 
@@ -165,14 +155,14 @@ mod tests {
         let test_string = " aaa\nbbb \nccc ddd\njjj";
         let lines = Lines::from_string(test_string);
         assert!(lines.len() == 4);
-        let lines = Lines::from_string(&test_string.to_string());
+        let lines = Lines::from_string(test_string);
         assert!(lines.len() == 4);
         assert!(*lines[0] == " aaa\n");
         assert!(*lines[3] == "jjj");
         let test_string = " aaa\nbbb \nccc ddd\njjj\n";
         let lines = Lines::from_string(test_string);
         assert!(lines.len() == 4);
-        let lines = Lines::from_string(&test_string.to_string());
+        let lines = Lines::from_string(test_string);
         assert!(lines.len() == 4);
         assert!(*lines[0] == " aaa\n");
         assert!(*lines[3] == "jjj\n");

@@ -262,7 +262,7 @@ impl AbstractDiff {
             {
                 // We've run out of lines to patch
                 if let Some(file_path) = repd_file_path {
-                    write!(err_w, "{}: Unexpected end of file: ", file_path).unwrap();
+                    write!(err_w, "{file_path}: Unexpected end of file: ").unwrap();
                 } else {
                     write!(err_w, "Unexpected end of file: ").unwrap();
                 }

@@ -151,7 +151,7 @@ macro_rules! markup_as {
     }};
 }
 
-pub trait DiffPlusTextBuffer: gtk::TextBufferExt {
+pub trait DiffPlusTextBuffer: TextBufferExt {
     fn append_markup(&mut self, markup: &str) {
         self.insert_markup(&mut self.get_end_iter(), markup);
     }
@@ -195,12 +195,12 @@ pub trait DiffPlusTextBuffer: gtk::TextBufferExt {
             self.append_markup(&markup_as!(MarkupType::Stats, &first_line[..i + 4]));
             self.append_markup(&markup_as!(MarkupType::ContextAid, &first_line[i + 4..]));
             for line in iter {
-                if line.starts_with("+") {
-                    self.append_added_line(&line);
-                } else if line.starts_with("-") {
-                    self.append_markup(&markup_as!(MarkupType::Removed, &line));
+                if line.starts_with('+') {
+                    self.append_added_line(line);
+                } else if line.starts_with('-') {
+                    self.append_markup(&markup_as!(MarkupType::Removed, line));
                 } else {
-                    self.append_markup(&markup_as!(MarkupType::Unchanged, &line));
+                    self.append_markup(&markup_as!(MarkupType::Unchanged, line));
                 }
             }
         }
@@ -214,26 +214,26 @@ pub trait DiffPlusTextBuffer: gtk::TextBufferExt {
         for hunk in context_diff.hunks().iter() {
             let mut iter = hunk.iter();
             let first_line = iter.next().unwrap();
-            self.append_markup(&markup_as!(MarkupType::Separator, &first_line));
+            self.append_markup(&markup_as!(MarkupType::Separator, first_line));
             let mut in_post = false;
             for line in iter {
                 if line.starts_with("***") {
-                    self.append_markup(&markup_as!(MarkupType::Ante, &line));
+                    self.append_markup(&markup_as!(MarkupType::Ante, line));
                 } else if line.starts_with("---") {
                     in_post = true;
-                    self.append_markup(&markup_as!(MarkupType::Post, &line));
-                } else if line.starts_with("!") {
+                    self.append_markup(&markup_as!(MarkupType::Post, line));
+                } else if line.starts_with('!') {
                     if in_post {
-                        self.append_added_line(&line);
+                        self.append_added_line(line);
                     } else {
-                        self.append_markup(&markup_as!(MarkupType::Removed, &line));
+                        self.append_markup(&markup_as!(MarkupType::Removed, line));
                     }
-                } else if line.starts_with("+") {
-                    self.append_added_line(&line);
-                } else if line.starts_with("-") {
-                    self.append_markup(&markup_as!(MarkupType::Removed, &line));
+                } else if line.starts_with('+') {
+                    self.append_added_line(line);
+                } else if line.starts_with('-') {
+                    self.append_markup(&markup_as!(MarkupType::Removed, line));
                 } else {
-                    self.append_markup(&markup_as!(MarkupType::Unchanged, &line));
+                    self.append_markup(&markup_as!(MarkupType::Unchanged, line));
                 }
             }
         }
@@ -241,7 +241,7 @@ pub trait DiffPlusTextBuffer: gtk::TextBufferExt {
 
     fn append_git_binary_diff(&mut self, git_binary_diff: &GitBinaryDiff) {
         for line in git_binary_diff.iter() {
-            self.append_markup(&markup_as!(MarkupType::Unchanged, &line));
+            self.append_markup(&markup_as!(MarkupType::Unchanged, line));
         }
     }
 }
@@ -270,13 +270,13 @@ impl DiffPlusDisplay {
         dpp.v_box.pack_start(&dpp.sw, true, true, 0);
         let mut buffer: gtk::TextBuffer = dpp.text_view.get_buffer().unwrap();
         if let Some(preamble) = diff_plus.preamble() {
-            buffer.append_preamble(&preamble);
+            buffer.append_preamble(preamble);
         }
         match diff_plus.diff() {
-            Diff::Unified(unified_diff) => buffer.append_unified_diff(&unified_diff),
-            Diff::Context(context_diff) => buffer.append_context_diff(&context_diff),
-            Diff::GitBinary(git_binary_diff) => buffer.append_git_binary_diff(&git_binary_diff),
-            Diff::GitPreambleOnly(git_preamble) => buffer.append_git_preamble(&git_preamble),
+            Diff::Unified(unified_diff) => buffer.append_unified_diff(unified_diff),
+            Diff::Context(context_diff) => buffer.append_context_diff(context_diff),
+            Diff::GitBinary(git_binary_diff) => buffer.append_git_binary_diff(git_binary_diff),
+            Diff::GitPreambleOnly(git_preamble) => buffer.append_git_preamble(git_preamble),
         }
 
         dpp.v_box.show_all();
@@ -291,33 +291,25 @@ impl DiffPlusDisplay {
             *self.digest.borrow_mut() = new_digest;
             // TODO: optomise scrollbar stuff
             let h_pos = if let Some(sb) = self.sw.get_hscrollbar() {
-                if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>() {
-                    Some(sb.get_value())
-                } else {
-                    None
-                }
+                sb.downcast_ref::<gtk::Scrollbar>().map(|sb| sb.get_value())
             } else {
                 None
             };
             let v_pos = if let Some(sb) = self.sw.get_vscrollbar() {
-                if let Some(sb) = sb.downcast_ref::<gtk::Scrollbar>() {
-                    Some(sb.get_value())
-                } else {
-                    None
-                }
+                sb.downcast_ref::<gtk::Scrollbar>().map(|sb| sb.get_value())
             } else {
                 None
             };
             let mut buffer: gtk::TextBuffer = self.text_view.get_buffer().unwrap();
             buffer.delete(&mut buffer.get_start_iter(), &mut buffer.get_end_iter());
             if let Some(preamble) = diff_plus.preamble() {
-                buffer.append_preamble(&preamble);
+                buffer.append_preamble(preamble);
             }
             match diff_plus.diff() {
-                Diff::Unified(unified_diff) => buffer.append_unified_diff(&unified_diff),
-                Diff::Context(context_diff) => buffer.append_context_diff(&context_diff),
-                Diff::GitBinary(git_binary_diff) => buffer.append_git_binary_diff(&git_binary_diff),
-                Diff::GitPreambleOnly(git_preamble) => buffer.append_git_preamble(&git_preamble),
+                Diff::Unified(unified_diff) => buffer.append_unified_diff(unified_diff),
+                Diff::Context(context_diff) => buffer.append_context_diff(context_diff),
+                Diff::GitBinary(git_binary_diff) => buffer.append_git_binary_diff(git_binary_diff),
+                Diff::GitPreambleOnly(git_preamble) => buffer.append_git_preamble(git_preamble),
             }
             if let Some(h_pos) = h_pos {
                 if let Some(sb) = self.sw.get_hscrollbar() {
@@ -394,14 +386,14 @@ impl DiffPlusNotebook {
             let menu_label = make_file_label(&file_path, adds_tws);
             let mut diff_plus_displays = self.diff_plus_displays.borrow_mut();
             if let Some(diff_plus_display) = diff_plus_displays.get(&file_path) {
-                diff_plus_display.update(&diff_plus);
+                diff_plus_display.update(diff_plus);
                 self.notebook
                     .set_tab_label(diff_plus_display.pwo(), Some(&tab_label));
                 self.notebook
                     .set_menu_label(diff_plus_display.pwo(), Some(&menu_label));
                 existing.remove(&file_path);
             } else {
-                let diff_plus_display = DiffPlusDisplay::new(&diff_plus);
+                let diff_plus_display = DiffPlusDisplay::new(diff_plus);
                 self.notebook.append_page_menu(
                     diff_plus_display.pwo(),
                     Some(&tab_label),
@@ -439,7 +431,7 @@ impl DiffPlusNotebook {
             }
             let tab_label = make_file_label(&file_path, adds_tws);
             let menu_label = make_file_label(&file_path, adds_tws);
-            let diff_plus_display = DiffPlusDisplay::new(&diff_plus);
+            let diff_plus_display = DiffPlusDisplay::new(diff_plus);
             self.notebook.append_page_menu(
                 diff_plus_display.pwo(),
                 Some(&tab_label),

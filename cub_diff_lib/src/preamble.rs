@@ -69,10 +69,7 @@ impl GitPreamble {
     }
 
     pub fn get_extra_line_index(&self, name: &str) -> Option<usize> {
-        match self.extras.get(name) {
-            Some(extra) => Some(extra.1),
-            None => None,
-        }
+        self.extras.get(name).map(|extra| extra.1)
     }
 }
 
@@ -100,8 +97,7 @@ impl Default for GitPreambleParser {
 impl PreambleParserIfce<GitPreamble> for GitPreambleParser {
     fn new() -> GitPreambleParser {
         let diff_cre_str = format!(
-            r"^diff\s+--git\s+({})\s+({})(\n)?$",
-            PATH_RE_STR, PATH_RE_STR
+            r"^diff\s+--git\s+({PATH_RE_STR})\s+({PATH_RE_STR})(\n)?$"
         );
         let diff_cre = Regex::new(&diff_cre_str).unwrap();
 
@@ -113,10 +109,10 @@ impl PreambleParserIfce<GitPreamble> for GitPreambleParser {
             r"^(similarity index)\s+((\d*)%)(\n)?$",
             r"^(dissimilarity index)\s+((\d*)%)(\n)?$",
             r"^(index)\s+(([a-fA-F0-9]+)..([a-fA-F0-9]+)( (\d*))?)(\n)?$",
-            &format!(r"^(copy from)\s+({})(\n)?$", PATH_RE_STR),
-            &format!(r"^(copy to)\s+({0})(\n)?$", PATH_RE_STR),
-            &format!(r"^(rename from)\s+({0})(\n)?$", PATH_RE_STR),
-            &format!(r"^(rename to)\s+({0})(\n)?$", PATH_RE_STR),
+            &format!(r"^(copy from)\s+({PATH_RE_STR})(\n)?$"),
+            &format!(r"^(copy to)\s+({PATH_RE_STR})(\n)?$"),
+            &format!(r"^(rename from)\s+({PATH_RE_STR})(\n)?$"),
+            &format!(r"^(rename to)\s+({PATH_RE_STR})(\n)?$"),
         ]
         .iter()
         .map(|cre_str| Regex::new(cre_str).unwrap())
@@ -129,11 +125,7 @@ impl PreambleParserIfce<GitPreamble> for GitPreambleParser {
     }
 
     fn get_preamble_at(&self, lines: &[Line], start_index: usize) -> Option<GitPreamble> {
-        let captures = if let Some(captures) = self.diff_cre.captures(&lines[start_index]) {
-            captures
-        } else {
-            return None;
-        };
+        let captures = self.diff_cre.captures(&lines[start_index])?;
         let ante_file_path = if let Some(path) = captures.get(3) {
             path.as_str().to_string()
         } else {
@@ -229,8 +221,7 @@ impl Default for DiffPreambleParser {
 impl PreambleParserIfce<DiffPreamble> for DiffPreambleParser {
     fn new() -> Self {
         let cre_str = format!(
-            r"^diff(\s.+)\s+({0})\s+({1})(\n)?$",
-            PATH_RE_STR, PATH_RE_STR
+            r"^diff(\s.+)\s+({PATH_RE_STR})\s+({PATH_RE_STR})(\n)?$"
         );
         DiffPreambleParser {
             cre: Regex::new(&cre_str).unwrap(),
@@ -238,13 +229,9 @@ impl PreambleParserIfce<DiffPreamble> for DiffPreambleParser {
     }
 
     fn get_preamble_at(&self, lines: &[Line], start_index: usize) -> Option<DiffPreamble> {
-        let captures = if let Some(captures) = self.cre.captures(&lines[start_index]) {
-            captures
-        } else {
-            return None;
-        };
+        let captures = self.cre.captures(&lines[start_index])?;
         if let Some(m) = captures.get(1) {
-            if m.as_str().find("--git").is_some() {
+            if m.as_str().contains("--git") {
                 return None;
             }
         }
@@ -329,13 +316,9 @@ impl PreambleParser {
     pub fn get_preamble_at(&self, lines: &[Line], start_index: usize) -> Option<Preamble> {
         if let Some(preamble) = self.git_preamble_parser.get_preamble_at(lines, start_index) {
             Some(Preamble::Git(preamble))
-        } else if let Some(preamble) = self
+        } else { self
             .diff_preamble_parser
-            .get_preamble_at(lines, start_index)
-        {
-            Some(Preamble::Diff(preamble))
-        } else {
-            None
+            .get_preamble_at(lines, start_index).map(Preamble::Diff)
         }
     }
 }

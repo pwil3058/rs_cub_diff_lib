@@ -44,12 +44,7 @@ pub mod lines {
         }
 
         fn find_first_sub_lines(&self, sub_lines: &[&str], start_index: usize) -> Option<usize> {
-            for index in start_index..=start_index + self.len() - sub_lines.len() {
-                if self.contains_sub_lines_at(sub_lines, index) {
-                    return Some(index);
-                }
-            }
-            None
+            (start_index..=start_index + self.len() - sub_lines.len()).find(|&index| self.contains_sub_lines_at(sub_lines, index))
         }
     }
 
@@ -180,14 +175,14 @@ pub mod text_diff {
         skip: F,
     ) -> Vec<&'a str> {
         let mut trimmed_lines: Vec<&str> = vec![];
-        for (index, ref line) in lines.iter().enumerate() {
+        for (index, line) in lines.iter().enumerate() {
             if skip(line) || line.starts_with('\\') {
                 continue;
             }
             if (index + 1) == lines.len() || !lines[index + 1].starts_with('\\') {
                 trimmed_lines.push(&line[trim_left_n..]);
             } else {
-                trimmed_lines.push(&line[trim_left_n..].trim_end_matches('\n'));
+                trimmed_lines.push(line[trim_left_n..].trim_end_matches('\n'));
             }
         }
         trimmed_lines
